@@ -97,21 +97,12 @@ brain20k<-FindClusters(brain20k,resolution = 0.2)
 wrap_plots(lapply(DimPlot(brain20k,group.by=c('cell_type','seurat_clusters'),label = T,
                           label.size = 3,combine = F),function(p)p+NoLegend()))
 
-#save object
-saveRDS(brain20k,fp(out,'SEAAD_brains_MTG_20k.rds'))
 
-
-
-#save matrix and metadata for exercise
-
-
-library(Matrix)
-out1<-fp(out,'Young_coding_exercise')
-dir.create(out1)
 
 #only on 3' data
 brain20kf<-subset(brain20k,assay!='10x multiome')
 brain20kf
+
 
 #stats
 table(brain20kf$donor_id)
@@ -120,6 +111,15 @@ table(unique(mtd,by='donor_id')$disease)
 # dementia   normal 
 #       42       47 
 
+#save object
+saveRDS(brain20kf,fp(out,'SEAAD_brains_MTG_34k.rds'))
+
+
+#save matrix and metadata for exercise
+
+library(Matrix)
+out1<-fp(out,'Young_coding_exercise')
+dir.create(out1)
 # save sparse matrix
 out2<-fp(out1,'SEA_AD34k_filtered_feature_bc_matrix')
 dir.create(out2)
