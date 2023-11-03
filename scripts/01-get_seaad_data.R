@@ -145,3 +145,35 @@ colnames(mat)
 mtd<-fread(fp(out1,'SEA_AD34k_metadata.csv.gz'))
 mtd     
 #OK
+
+#get DLPFC
+system('curl -o /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/astro_dlpfc.rds "https://corpora-data-prod.s3.amazonaws.com/685d3069-7625-4ea0-bb23-db2e2b2840da/local.rds?AWSAccessKeyId=ASIATLYQ5N5XZOUTSTV2&Signature=NHPIKccGT%2BrEKJfAQkkX1oxMe1A%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEBcaCXVzLXdlc3QtMiJHMEUCIDS%2Fbwjv1xkusqk9o%2Ba%2F4cXSi9AqHneTB7Jd8pVPGptVAiEAkl%2BTbWeCXJynUvXTkGR1NynAIVP5ZrseMFEIEcrk0cQq9AMI8P%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARABGgwyMzE0MjY4NDY1NzUiDMcN5yMjrl15KYawRCrIA8G1DSce7zv9cO8PvLFHz2AVpmicrzJDbOzynL5hshoxRIUtUDhioxzPFTgx00sL4sWlspqZl%2B7KNXL70wN%2B9XY%2FitKzkwatLQ4JF2hddw9JKOXFG1VdURRtAIb1C88smSN9FHCkErxmfIzKrezSdKxFFjzoLO0GEW2sotqp3drcuO2S0xbPutJCZ4IDOHFJIxQjTmEZB8xG5EcBzTp%2BLoRTzJQvCzStgcxoGAzSN4d5saGexxrKASd9wonY04dm9iakN%2F02a7c7Ug%2FzH6YD8Ym1gG8IuX8EIOj5KVp6Uwv%2F5agBMaY%2BQu3S9ryxySASdcXTWA2AbcNuhLudKGD%2BM%2FH4QXqxNzwMhJsCLkI9numfs6NLMPmmlVyyjn6Y%2BqaWUyk5HcwoCbBQcvIsKdMaLE1x%2Fvj1VmWP%2BrPs3OeMmuOnHhOZ27yGsnSedYEMTda0qngUAOKHDc%2FbIEFxTJFgrhBkm0p%2BclFaQ6sAxnZhlD9Huvax4Ddtwku95fTFTTq2A8oi0kHSa62S4F3GPeO2jyeZ%2FJoA6kJ5KH7FeXI592BfAwS3KjCksf0AU%2FmPl%2BuxfLLGBHv8UH%2F%2BqUQ6mDfepUAlPcl%2BEJdlzjDiyfynBjqlAV%2FN18cW%2Fr2I1quq1IG20aPPTuRIDbIdIxGOJOkF7QYJdKWewHnA8Ad2MJR8lXIQrl3SjEwpfSYp4%2F9R7YAxkm1iRj%2BzbHPvz27P3EZXDX6OqBitdDlrQz9qHtOl0yFJ9MG2r699rtW%2FZf46J7T%2FW%2FCTEBkT82xq6TpHokjPD8wzq%2F7qfViNYkOygvvXPEUDJP9XGsujagU%2BXqO6Nu%2BZzXxMrdhg5Q%3D%3D&Expires=1695064329"')
+
+
+#get Full DLPFC and MTG  data####
+
+#try to get from h5ad entire dataset
+#try first see if Seurat conversion works on endothelial
+system('curl -o /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/endothelial.h5ad "https://corpora-data-prod.s3.amazonaws.com/013c6a00-0507-49e8-998a-5022bd65621a/local.h5ad?AWSAccessKeyId=ASIATLYQ5N5XYHYGK57I&Signature=mNweGqhUiE17AFZ5A2PQ3wNBNG0%3D&x-amz-security-token=IQoJb3JpZ2luX2VjENv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJIMEYCIQDE7wdbmVBXMuaOzX7p3sWEDTSgFgsN6UgU0Mubo2U8KQIhAJgFjOljwKQ%2FmC5Fk%2Ft0wCaQhRgnuHyzLFB3JfseciDhKusDCBQQARoMMjMxNDI2ODQ2NTc1IgxPq01YYAAvROa4dn4qyANQtypMxD23b8f44aj1OWk2gsCmNxRuurSwXZqdERVvPFcMQmaKe8fKFo7rWZxGHTb04m6IEKblfCmLtxzTY%2Fv4OsuIETbyJczZVsrbL1XSkUlj%2BODM1WjIYvBve9YV7QpgDOZ6H144vUA%2FhGTc1%2Br%2B1gy0IwqWevi0JsGVM7GQeP%2BRJgroPDAHmqNPHExkpKCCxXT4IiVB0yCBhGzJiD2HOuNrxtFfyUtkjeUxyTmUmDVxm%2BOZBXi7j1hu%2FjUBjhKyqgB2Gilwn%2BcgUxIog0NAGxOTKaV5RgIdOhVAyPQq5g8Bn4h8m%2BBvqe1NEvChd3w3aS1cTtDDs1U%2B2lDHupw%2Bi%2FATnndjTm1fiWVIMlywTsTJJDySpyo%2FJLtEAFdjQucxywXsm8IR%2FrTQ18m1XzU4AlQM1Cmac4ARR25rovrzwk%2BuH2xrwAVhRAcbQsO%2Bma2DlHV4HtXik3WMEH2Xj%2BCec9IPs4USZQld8i27RN9Lb0w9krnl64Cpavj%2FBGGakVl%2FNWE6aqfu%2BrnsCELcGYem8A6J0C6zB5fnjMwC6APtzxdHxE02BPoQ4%2F5iepcurf2Azv6kD2SZd3Ee7uSXtPVBJa9LQSXsRrUwmN2IqgY6pAF2T4hIGViTGPKloDpjIzMMkp20to3X4trvis1CVYsLH7s8NrFpnY4YW8lH94UryaOhT9%2FDmBK0GeSsValTRSwFOYSoJf86dERjp8w23pxfp2EIodvy83gkqnFvjD0lNE3T8Z9416ejxzDJyNDZbNiEU4eCXRs1tyiLRAy28NSZwGXRSsoU8QHkSmAqIJBxlBbRiwMishc4VVTaqctUREVUn28Oxg%3D%3D&Expires=1699456777"')
+
+
+#strat: get the full h5ad on aws, create one h5ad by cell type, and transform to Seurat.
+#get MTG and DLPFC on AWS
+system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/DLPFC/RNAseq/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad')
+
+
+system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/MTG/RNAseq/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad')
+
+#create one h5ad by cell type
+
+CreateJobForPyFile('scripts/01-split_per_cell_type.py',micromamba_env = 'singlecell',nThreads = 32,maxHours = 12)
+RunQsub('scripts/01-split_per_cell_type.qsub',job_name = 'splitSEAAD')
+
+#transform each one to Seurat #following https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html
+library(Seurat)
+library(SeuratData)
+library(SeuratDisk)
+
+#create the pseudobulk matrix
+
+#create the downsampled data
