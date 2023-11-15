@@ -158,22 +158,51 @@ system('curl -o /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/endothelial.h5ad "ht
 
 
 #strat: get the full h5ad on aws, create one h5ad by cell type, and transform to Seurat.
-#get MTG and DLPFC on AWS
+
+#1) get MTG and DLPFC on AWS
 system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/DLPFC/RNAseq/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad')
 
 
 system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/MTG/RNAseq/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad')
 
-#create one h5ad by cell type
+#2) create one anndata (h5ad format) object by cell type
+#run 01A
+CreateJobForPyFile('scripts/01A-split_per_cell_type.py',micromamba_env = 'singlecell',
+                   nThreads = 28,memPerCore = '18G',maxHours = 12)
+RunQsub('scripts/01A-split_per_cell_type.qsub',job_name = 'splitSEAAD')
 
-CreateJobForPyFile('scripts/01-split_per_cell_type.py',micromamba_env = 'singlecell',nThreads = 32,maxHours = 12)
-RunQsub('scripts/01-split_per_cell_type.qsub',job_name = 'splitSEAAD')
+#2) transform each one to Seurat 
+#based on https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html
+#and https://github.com/mojaveazure/seurat-disk/issues/109#issuecomment-1137806533
+#install.packages('Seurat')
 
-#transform each one to Seurat #following https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html
 library(Seurat)
 library(SeuratData)
 library(SeuratDisk)
 
-#create the pseudobulk matrix
+#for 1
+Convert("outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad", dest = "h5seurat", overwrite = TRUE)
+endo <- LoadH5Seurat("outputs/01-SEAAD_data/DLPFC/Endothelial.h5seurat",meta.data=F,misc=F)
+#UMIs to RNA
+endo[['RNA']]<-CreateAssayObject(counts = endo@assays$UMIs@counts)
+endo[['UMIs']]<-NULL
 
-#create the downsampled data
+#Add metdata
+colnames(endo)
+mtd<-fread('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
+endo<-AddMetaData(endo,data.frame(mtd[colnames(endo),on='exp_component_name'],row.names ='exp_component_name' ))
+
+saveRDS(endo,fp(out1,'Endothelial.rds'))
+#rm h5seurat
+system(paste('rm',"outputs/01-SEAAD_data/DLPFC/Endothelial.h5seurat"))
+
+
+#for all 
+#run 01B-
+CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24)
+RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat')
+
+
+#create the pseudobulk matrix [TODO]
+
+#create the downsampled data [TODO]
