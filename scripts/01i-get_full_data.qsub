@@ -1,0 +1,36 @@
+#!/bin/bash -l
+#Parameters of the Jobs :
+
+#$-P tcwlab
+#$-j y
+#$-l h_rt=12:00:00
+#$-o  ./logs/01i-get_full_data.log
+#$-pe omp 4
+
+
+#keep track of some information just in case anything goes wrong
+echo "=========================================================="
+echo "Starting on : $(date)"
+echo "Running on node : $(hostname)"
+echo "Current directory : $(pwd)"
+echo "Current job ID : $JOB_ID"
+echo "Current job name : $JOB_NAME"
+if [[ -n "${SGE_TASK_ID}" && $SGE_TASK_ID != "undefined" ]]; then
+    echo "Task index number : $SGE_TASK_ID"
+fi
+if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
+    echo "Total task number : $SGE_TASK_LAST"
+fi
+echo "=========================================================="
+
+echo "----- Processing of DLPFC -----"
+wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/DLPFC/RNAseq/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad
+echo "----- Processing of MTG -----"
+wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-07-19.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/MTG/RNAseq/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad
+
+
+
+echo "=========================================================="
+echo "Finished Analysis for $PROJ_NAME on : $(date)"
+echo "=========================================================="
+

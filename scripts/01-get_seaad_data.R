@@ -5,6 +5,7 @@ library(Seurat)
 out<-'../singlecell-brain/outputs/01-SEAAD_data'
 dir.create(out,recursive = T)
 
+#GET the rdf on CellXGene####
 # system('curl -o ref-data/SEAAD/oligo.rds "https://corpora-data-prod.s3.amazonaws.com/0bcc5dbd-0a6b-461a-b10c-d79a326a29cf/local.rds?AWSAccessKeyId=ASIATLYQ5N5XTJULZ6FX&Signature=l1L7VKdhl9PUA%2BoGc0N6FAW6Q6w%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEMz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIHANI3tq2E2kkqgt9rN9bFItFqqLjG%2F%2BukVNlqm21qr0AiA6wTlG6NhNqvyVqxQ9AEETFBhyKfNvzxei0yWNJ7ah1Sr0Awj0%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAEaDDIzMTQyNjg0NjU3NSIMJlE6hpbBIxFtFYkyKsgDtquTcniXhHXdRKg%2FD6oVy15CNAm9ad16qfpdPrmuv%2B8cnhVZGA0%2FVeWvza49oG4Wgj%2B%2BBt5T7wsKWdJbPbrfIDIkb2C5c93B0LsRAxDemoGOtJ7uyD3Gz%2FIqyD7pspOxGtuQdIaeMMtaTOXsumn3Q9wR%2FrmofTnbbx3Re3oeKmemb27QYTGHJxFKflx%2B%2BJuQLn6OL%2Bz1GeNRtaCq9g2iLfkV7lWzqHBM5MiqpuMRIF1bPSbjDFVAkK8szfmHVC9JO%2BtBJsOiAjauXTYIGLYWBBYl%2B%2FOhjrvwIxOkyzQDcFPXjO2Xi0QBdSmSWjWswTz8dZEKggap2vOqea4mnRPNU3ZLAHhWPoZfokcvY4MImqpVWza%2BJO5BRsutgUCiwgMWqE%2FM5PhIigACj1cZIo%2F1pRvhTK7wcgCxotRpZ1EqPn4ctgLH4tNUbpwulI4S%2Fbpmr%2FpHImpJ9hLYgQv5XiSiKAumGelOnqNdW3qVFk5XxR%2Ft6aSTCxQs2zmbCyZOk9Kd6lOai4LgaR1tHUmrH%2FB1DlrMh%2B7g3Bpe7bRHHippTRx7c%2BXqSxF7317XOhXkyeHWIObnOtmFBoiqlybKNq72RwuGwIcsdBCsMMbGuaMGOqYBo0dUCzf6veK4K7I%2FZPdhwR1nglVfOnGxCOwQd3na4ks%2F4gFRPd%2FLoEndEgSaip%2FSA%2FiNfIngGL34yiadYo9eJ9xXxxK%2FUJ0eP%2BCAdn44PTCw893lg5fXWhVU5BoK0cwbzybnZKcctlrL4XxVVcrgiy0Kv8NO5y6Ck9Qy4S0LRLvhUm0k45qSnwqQdOpMQsv0u7yHmXxhwBn9AfIOcom8eTO4I240Lg%3D%3D&Expires=1685567849"')
 # system('curl -o ref-data/SEAAD/Vip.rds "https://corpora-data-prod.s3.amazonaws.com/14632982-a230-40f3-9873-600d4ddec5aa/local.rds?AWSAccessKeyId=ASIATLYQ5N5XV2SDXEL5&Signature=FZwItgv7pcbheWzY9lpHxF1xIP8%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEMv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCID3h3jAtF8yhD5RZrNPzmbhbWTfErrDZfhoSWWkeIwCcAiEAzAMU0FhETPpyBAebZTV%2BjbCcGav7T7%2BeYO%2B38iZIbMkq9AMI8%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARABGgwyMzE0MjY4NDY1NzUiDPATOnyPkr085qmBzCrIA3Bwhue0%2FaxyfGFqOE1Y2IFqZiOYQ65p73TFMHsr%2FdnCQwehzEA%2BsWxCpieiyWCZBN61%2FjxE%2FT3xhVGIj16QyGQqiLAkuWPkvNmp9o60urX5po59WgU1CyX9Gp8Kx6rra3rhE5ckzmUlFU4vkiClPZEc6baQKVxqPIuLYynFlnaDXwtWZdvz35nGVkGVLSG53yyTFhb79GSFaMuTDosZS%2BZ686dtRUaxGCTbRm%2FNBhIU1LEmp2WkB9qpo5Tj3lRC7OEXSN0%2FwGEWhCMgrhNdLFq9Xi342ZqjO7SkcSSQE85u5EmY2kgl887tTzmV4QCQx4Bm6AcSZBes%2FneWWSBboaZRHgs%2Fnp29n%2F8BCzp%2BMpeE8pgwHNwV%2BzS%2Bm5d3u72%2FOBqNjtEveuLU5cGhLnxBjs5rNOAK%2Bu0XwC%2BsJbz3Ah42vsVqPjW%2FoXc6fUBZsOF6C15BCXmIqSKeTQHLXCdNTHgC0nJfumMUJio99GBhn9uIGB5x04hcX9gp6YRoUk2IEI2Oj3XaGC7nWZLNtPxUGSBJ5ne8suEtpFlaRZMIRUWbhns2uf7T4rbLVWIb1j%2BJdbsww6FgSUmLJ8aB0WPTqSR2SSsjj3BTkzCeqrmjBjqlAevXbGwDpQ03KR6r02VfrEuPhw%2B98UqZuKFh9%2BX13Ootdr4XGWMkK0HRkqMlij2zsla%2BkQL4TZjgANz3n6Q4nAAry7dKfDtZsm06Luc6U1sEJWcbMG19Q08BTocCFr5uEKkXqKPYklCoApXjldV3Sm6odP8A4EvAsUbB9%2BP6bOlpkDlPwCBrVIiqDdVRgVD9bCGPErJ77GYAy2NJy84lVuOyw2q%2B7w%3D%3D&Expires=1685569296"')
 # system('curl -o ref-data/SEAAD/Pvalb.rds "https://corpora-data-prod.s3.amazonaws.com/705feb0c-0733-41a7-8887-ad88db62464a/local.rds?AWSAccessKeyId=ASIATLYQ5N5XTJULZ6FX&Signature=T9PpIfeAb6lo1H8NPlP30qpby7I%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEMz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIHANI3tq2E2kkqgt9rN9bFItFqqLjG%2F%2BukVNlqm21qr0AiA6wTlG6NhNqvyVqxQ9AEETFBhyKfNvzxei0yWNJ7ah1Sr0Awj0%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAEaDDIzMTQyNjg0NjU3NSIMJlE6hpbBIxFtFYkyKsgDtquTcniXhHXdRKg%2FD6oVy15CNAm9ad16qfpdPrmuv%2B8cnhVZGA0%2FVeWvza49oG4Wgj%2B%2BBt5T7wsKWdJbPbrfIDIkb2C5c93B0LsRAxDemoGOtJ7uyD3Gz%2FIqyD7pspOxGtuQdIaeMMtaTOXsumn3Q9wR%2FrmofTnbbx3Re3oeKmemb27QYTGHJxFKflx%2B%2BJuQLn6OL%2Bz1GeNRtaCq9g2iLfkV7lWzqHBM5MiqpuMRIF1bPSbjDFVAkK8szfmHVC9JO%2BtBJsOiAjauXTYIGLYWBBYl%2B%2FOhjrvwIxOkyzQDcFPXjO2Xi0QBdSmSWjWswTz8dZEKggap2vOqea4mnRPNU3ZLAHhWPoZfokcvY4MImqpVWza%2BJO5BRsutgUCiwgMWqE%2FM5PhIigACj1cZIo%2F1pRvhTK7wcgCxotRpZ1EqPn4ctgLH4tNUbpwulI4S%2Fbpmr%2FpHImpJ9hLYgQv5XiSiKAumGelOnqNdW3qVFk5XxR%2Ft6aSTCxQs2zmbCyZOk9Kd6lOai4LgaR1tHUmrH%2FB1DlrMh%2B7g3Bpe7bRHHippTRx7c%2BXqSxF7317XOhXkyeHWIObnOtmFBoiqlybKNq72RwuGwIcsdBCsMMbGuaMGOqYBo0dUCzf6veK4K7I%2FZPdhwR1nglVfOnGxCOwQd3na4ks%2F4gFRPd%2FLoEndEgSaip%2FSA%2FiNfIngGL34yiadYo9eJ9xXxxK%2FUJ0eP%2BCAdn44PTCw893lg5fXWhVU5BoK0cwbzybnZKcctlrL4XxVVcrgiy0Kv8NO5y6Ck9Qy4S0LRLvhUm0k45qSnwqQdOpMQsv0u7yHmXxhwBn9AfIOcom8eTO4I240Lg%3D%3D&Expires=1685569333"')
@@ -23,7 +24,7 @@ dir.create(out,recursive = T)
 # system('curl -o ref-data/SEAAD/Sst-Chodl.rds "https://corpora-data-prod.s3.amazonaws.com/7365e4e1-4711-494b-8171-fda7f5611872/local.rds?AWSAccessKeyId=ASIATLYQ5N5XV2SDXEL5&Signature=um3v%2BiaeVeJTFZrzxPXgUwb2RQc%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEMv%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCID3h3jAtF8yhD5RZrNPzmbhbWTfErrDZfhoSWWkeIwCcAiEAzAMU0FhETPpyBAebZTV%2BjbCcGav7T7%2BeYO%2B38iZIbMkq9AMI8%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARABGgwyMzE0MjY4NDY1NzUiDPATOnyPkr085qmBzCrIA3Bwhue0%2FaxyfGFqOE1Y2IFqZiOYQ65p73TFMHsr%2FdnCQwehzEA%2BsWxCpieiyWCZBN61%2FjxE%2FT3xhVGIj16QyGQqiLAkuWPkvNmp9o60urX5po59WgU1CyX9Gp8Kx6rra3rhE5ckzmUlFU4vkiClPZEc6baQKVxqPIuLYynFlnaDXwtWZdvz35nGVkGVLSG53yyTFhb79GSFaMuTDosZS%2BZ686dtRUaxGCTbRm%2FNBhIU1LEmp2WkB9qpo5Tj3lRC7OEXSN0%2FwGEWhCMgrhNdLFq9Xi342ZqjO7SkcSSQE85u5EmY2kgl887tTzmV4QCQx4Bm6AcSZBes%2FneWWSBboaZRHgs%2Fnp29n%2F8BCzp%2BMpeE8pgwHNwV%2BzS%2Bm5d3u72%2FOBqNjtEveuLU5cGhLnxBjs5rNOAK%2Bu0XwC%2BsJbz3Ah42vsVqPjW%2FoXc6fUBZsOF6C15BCXmIqSKeTQHLXCdNTHgC0nJfumMUJio99GBhn9uIGB5x04hcX9gp6YRoUk2IEI2Oj3XaGC7nWZLNtPxUGSBJ5ne8suEtpFlaRZMIRUWbhns2uf7T4rbLVWIb1j%2BJdbsww6FgSUmLJ8aB0WPTqSR2SSsjj3BTkzCeqrmjBjqlAevXbGwDpQ03KR6r02VfrEuPhw%2B98UqZuKFh9%2BX13Ootdr4XGWMkK0HRkqMlij2zsla%2BkQL4TZjgANz3n6Q4nAAry7dKfDtZsm06Luc6U1sEJWcbMG19Q08BTocCFr5uEKkXqKPYklCoApXjldV3Sm6odP8A4EvAsUbB9%2BP6bOlpkDlPwCBrVIiqDdVRgVD9bCGPErJ77GYAy2NJy84lVuOyw2q%2B7w%3D%3D&Expires=1685570644"')
 #
 
-#
+
 #produce a 50k proport. cells datasets
 # cells<-readRDS('ref-data/SEAAD/endo.rds')
 # head(cells@meta.data)
@@ -160,10 +161,16 @@ system('curl -o /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/endothelial.h5ad "ht
 #strat: get the full h5ad on aws, create one h5ad by cell type, and transform to Seurat.
 
 #1) get MTG and DLPFC on AWS
-system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/DLPFC/RNAseq/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad')
 
 
-system('wget -q -O /usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad https://sea-ad-single-cell-profiling.s3.amazonaws.com/MTG/RNAseq/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad')
+cmds<-list(DLPFC=paste('wget -q -O','/usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad',
+                       'https://sea-ad-single-cell-profiling.s3.amazonaws.com/DLPFC/RNAseq/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad'),
+           MTG=paste('wget -q -O','/usr2/postdoc/adpelle1/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-07-19.h5ad',
+                       'https://sea-ad-single-cell-profiling.s3.amazonaws.com/MTG/RNAseq/SEAAD_MTG_RNAseq_final-nuclei.2023-05-05.h5ad'))
+
+
+CreateJobFile(cmds,file = 'scripts/01i-get_full_data.qsub',nThreads = 4,maxHours = 12)
+RunQsub('scripts/01i-get_full_data.qsub',job_name = 'getFullSEAAD')
 
 #2) create one anndata (h5ad format) object by cell type
 #run 01A
@@ -171,36 +178,33 @@ CreateJobForPyFile('scripts/01A-split_per_cell_type.py',micromamba_env = 'single
                    nThreads = 28,memPerCore = '18G',maxHours = 12)
 RunQsub('scripts/01A-split_per_cell_type.qsub',job_name = 'splitSEAAD')
 
+#need to rerun for astro
+CreateJobForPyFile('scripts/01A-split_per_cell_type2.py',micromamba_env = 'singlecell',
+                   nThreads = 16,maxHours = 12)
+RunQsub('scripts/01A-split_per_cell_type2.qsub',job_name = 'splitSEAAD',wait_for = 'getFullSEAAD')
+
 #2) transform each one to Seurat 
 #based on https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html
 #and https://github.com/mojaveazure/seurat-disk/issues/109#issuecomment-1137806533
 #install.packages('Seurat')
 
 library(Seurat)
-library(SeuratData)
-library(SeuratDisk)
-
+library(sceasy)
+#devtools::install_github("cellgeni/sceasy")
+# sceasy::convertFormat(h5ad_file, from="anndata", to="seurat",
+#                       outFile='filename.rds')
 #for 1
 Convert("outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad", dest = "h5seurat", overwrite = TRUE)
-endo <- LoadH5Seurat("outputs/01-SEAAD_data/DLPFC/Endothelial.h5seurat",meta.data=F,misc=F)
-#UMIs to RNA
-endo[['RNA']]<-CreateAssayObject(counts = endo@assays$UMIs@counts)
-endo[['UMIs']]<-NULL
+sceasy::convertFormat('outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad', from="anndata", to="seurat",
+                      outFile='outputs/01-SEAAD_data/DLPFC/Endothelial.rds')
 
-#Add metdata
-colnames(endo)
-mtd<-fread('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
-endo<-AddMetaData(endo,data.frame(mtd[colnames(endo),on='exp_component_name'],row.names ='exp_component_name' ))
-
-saveRDS(endo,fp(out1,'Endothelial.rds'))
-#rm h5seurat
-system(paste('rm',"outputs/01-SEAAD_data/DLPFC/Endothelial.h5seurat"))
+endo <- readRDS("outputs/01-SEAAD_data/DLPFC/Endothelial.rds")
 
 
 #for all 
 #run 01B-
 CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24)
-RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat')
+RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat',wait_for = 'splitSEAAD')
 
 
 #create the pseudobulk matrix [TODO]
