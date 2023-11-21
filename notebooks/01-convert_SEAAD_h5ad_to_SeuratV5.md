@@ -1,6 +1,6 @@
 # Create Seurat Object from large H5ad Data
 When a dataset contain more than 300k cells, we cannot load the whole dataset in the cache, we need to work on it from the disk
-
+Here we will show how to transform a large h5ad single cell data to Seurat V5 object and analyze a subset ('sketch') of it.
 
 ```r
 #remotes::install_github("bnprks/BPCells")
