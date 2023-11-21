@@ -4,13 +4,21 @@
 #$-P tcwlab
 #$-j y
 #$-l h_rt=24:00:00
-#$-o  logs/01B-Anndata_to_Seurat.log
+#$-o  ./logs/01B-Anndata_to_Seurat.log
 #$-pe omp 16
 
 
 #Modules to load:
 
 module load R/4.2.1
+
+
+
+ source $HOME/.bashrc
+
+#Micromamba environment activation:
+
+micromamba activate singlecell
 
 
 #keep track of some information just in case anything goes wrong
@@ -28,7 +36,7 @@ if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
 fi
 echo "=========================================================="
 
-Rscript scripts/01B-Anndata_to_Seurat.R >> logs/01B-Anndata_to_Seurat.log
+Rscript scripts/01B-Anndata_to_Seurat.R >> ./logs/01B-Anndata_to_Seurat.log
 
 
 

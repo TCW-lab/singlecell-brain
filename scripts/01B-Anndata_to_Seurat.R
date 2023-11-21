@@ -1,11 +1,12 @@
-
 out<-'outputs/01-SEAAD_data'
 dir.create(out,recursive = T)
 
 
 library(Seurat)
-library(SeuratData)
-library(SeuratDisk)
+library(sceasy)
+library(reticulate)
+reticulate::use_condaenv('r-reticulate')
+
 source('../../utils/r_utils.R')
 
 

@@ -189,12 +189,20 @@ RunQsub('scripts/01A-split_per_cell_type2.qsub',job_name = 'splitSEAAD',wait_for
 #install.packages('Seurat')
 
 library(Seurat)
+library(SeuratData)
+library(SeuratDisk)
+library(reticulate)
 library(sceasy)
-#devtools::install_github("cellgeni/sceasy")
+devtools::install_github("cellgeni/sceasy",force = T)
 # sceasy::convertFormat(h5ad_file, from="anndata", to="seurat",
 #                       outFile='filename.rds')
 #for 1
-Convert("outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad", dest = "h5seurat", overwrite = TRUE)
+#Convert("outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad", dest = "h5seurat", overwrite = TRUE)
+#reticulate::conda_install(envname = 'base','anndata')
+reticulate::use_condaenv('r-reticulate')
+# reticulate::conda_install('r-reticulate','scanpy',channel = 'bioconda')
+# reticulate::conda_install('r-reticulate','pandas=1.5.1')
+
 sceasy::convertFormat('outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad', from="anndata", to="seurat",
                       outFile='outputs/01-SEAAD_data/DLPFC/Endothelial.rds')
 
@@ -203,7 +211,8 @@ endo <- readRDS("outputs/01-SEAAD_data/DLPFC/Endothelial.rds")
 
 #for all 
 #run 01B-
-CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24)
+CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24,loadBashrc = T,
+                  micromamba_env = 'singlecell')
 RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat',wait_for = 'splitSEAAD')
 
 
