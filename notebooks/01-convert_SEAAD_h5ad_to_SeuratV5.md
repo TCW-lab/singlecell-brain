@@ -89,7 +89,7 @@ SaveSeuratRds(
 ```
 
 ### 'sketch' a subset of cells
-That put in cache representative cells
+extract in cache representative subset of cells
 ```r
 ?SketchData
 seead_dlpfc <- NormalizeData(seead_dlpfc)
