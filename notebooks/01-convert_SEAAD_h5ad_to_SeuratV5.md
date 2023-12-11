@@ -20,31 +20,35 @@ GetH5ADCellMetadata<-function(path){
   cell_ids<-h5read(path, "/obs")[[cell.var]]
   
   cats_lvls<-h5read(path,'/obs/__categories')
+  
   cats<-names(cats_lvls)
   
   nums<-setdiff(names(h5read(path, "/obs"))[!str_detect(names(h5read(path, "/obs")),'^__')],cats)
   
   message('cell ids format:',head(cell_ids))
-  covs_dt<-data.table(cov=c(cats,nums))[,is.categorical:=cov%in%cats]
-  covs_dt[,do.call(cbind,list(h5read(path, paste0("/obs/",cov)))),by='cov']
   
   metanum <- do.call(cbind,lapply(nums, 
                                   function(n)h5read(path, paste0("/obs/",n))))
   colnames(metanum)<-nums
   
-  lapply(cats, 
-         function(n)levels(factor(cats_lvls[[n]],levels = cats_lvls[[n]])))
   
-  lapply(cats[1:5], 
-         function(n)print(h5read(path, paste0("/obs/",n))))
+  cats.list<-lapply(names(cats_lvls),function(n)h5read(path, paste0("/obs/",n)))
   
+  cats.list<-lapply(1:length(cats.list),function(i){
+    if(is.list(cats.list[[i]])){
+      new.cat<-paste(names(cats.list[i]),names(cats.list[[i]])[1])
+      cats[i]<-new.cat
+      return(cats_lvls[[i]][[1]][cats.list[[i]][[1]]+1])
+    }else{
+      return(cats_lvls[[i]][cats.list[[i]]+1])
+    }
+  })
   
-  metacat <- do.call(cbind,lapply(cats, 
-                                  function(n)levels(factor(cats_lvls[[n]],levels = cats_lvls[[n]]))[h5read(path, paste0("/obs/",n))[[1]]+1]))
-  dim(metacat)
-  head(metacat)
-  length(cats)
+  names(cats.list)<-cats
+  metacat <- do.call(cbind,cats.list)
   colnames(metacat)<-cats
+  
+ 
   metadata<-data.frame(as.data.frame(cbind(metacat,metanum)),row.names=cell_ids)
   message('head metadata:')
   

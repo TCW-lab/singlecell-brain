@@ -21,31 +21,35 @@ GetH5ADCellMetadata<-function(path){
   cell_ids<-h5read(path, "/obs")[[cell.var]]
   
   cats_lvls<-h5read(path,'/obs/__categories')
+  
   cats<-names(cats_lvls)
   
   nums<-setdiff(names(h5read(path, "/obs"))[!str_detect(names(h5read(path, "/obs")),'^__')],cats)
   
   message('cell ids format:',head(cell_ids))
-  covs_dt<-data.table(cov=c(cats,nums))[,is.categorical:=cov%in%cats]
-  covs_dt[,do.call(cbind,list(h5read(path, paste0("/obs/",cov)))),by='cov']
   
   metanum <- do.call(cbind,lapply(nums, 
                                   function(n)h5read(path, paste0("/obs/",n))))
   colnames(metanum)<-nums
   
-  lapply(cats, 
-         function(n)levels(factor(cats_lvls[[n]],levels = cats_lvls[[n]])))
   
-  lapply(cats[1:5], 
-         function(n)print(h5read(path, paste0("/obs/",n))))
+  cats.list<-lapply(names(cats_lvls),function(n)h5read(path, paste0("/obs/",n)))
   
+  cats.list<-lapply(1:length(cats.list),function(i){
+    if(is.list(cats.list[[i]])){
+      new.cat<-paste(names(cats.list[i]),names(cats.list[[i]])[1])
+      cats[i]<-new.cat
+      return(cats_lvls[[i]][[1]][cats.list[[i]][[1]]+1])
+    }else{
+      return(cats_lvls[[i]][cats.list[[i]]+1])
+    }
+  })
   
-  metacat <- do.call(cbind,lapply(cats, 
-                                  function(n)levels(factor(cats_lvls[[n]],levels = cats_lvls[[n]]))[h5read(path, paste0("/obs/",n))[[1]]+1]))
-  dim(metacat)
-  head(metacat)
-  length(cats)
+  names(cats.list)<-cats
+  metacat <- do.call(cbind,cats.list)
   colnames(metacat)<-cats
+  
+ 
   metadata<-data.frame(as.data.frame(cbind(metacat,metanum)),row.names=cell_ids)
   message('head metadata:')
   
@@ -73,7 +77,7 @@ mat <- open_matrix_dir(dir = str_replace(path,".h5ad", "_BP"))
 # Get metadata from the h5ad file
 
 metadata<-GetH5ADCellMetadata(path)
-
+table(metadata$Subclass)
 #create Seurat Object
 seead_dlpfc <- CreateSeuratObject(counts = mat, meta.data = metadata)
 
@@ -111,6 +115,7 @@ path='/projectnb/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.20
 
 #Get the count matrix
 data <- open_matrix_anndata_hdf5(path,group = 'layers/UMIs')
+
 #convert the matrix to a BP directory format to store the data efficiently
 write_matrix_dir(
   mat = data,
@@ -123,10 +128,11 @@ mat <- open_matrix_dir(dir = str_replace(path,".h5ad", "_BP"))
 # Get metadata from the h5ad file
 
 metadata<-GetH5ADCellMetadata(path)
-
+table(metadata$Subclass)
 #create Seurat Object
 seead_mtg <- CreateSeuratObject(counts = mat, meta.data = metadata)
-
+seead_mtg
+unique(seead_mtg[[]]$Subclass)
 #Save the seurat object
 SaveSeuratRds(
   object = seead_mtg,

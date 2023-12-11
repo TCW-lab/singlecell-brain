@@ -149,6 +149,9 @@ mtd
 
 #get DLPFC
 system('curl -o /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/astro_dlpfc.rds "https://corpora-data-prod.s3.amazonaws.com/685d3069-7625-4ea0-bb23-db2e2b2840da/local.rds?AWSAccessKeyId=ASIATLYQ5N5XZOUTSTV2&Signature=NHPIKccGT%2BrEKJfAQkkX1oxMe1A%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEBcaCXVzLXdlc3QtMiJHMEUCIDS%2Fbwjv1xkusqk9o%2Ba%2F4cXSi9AqHneTB7Jd8pVPGptVAiEAkl%2BTbWeCXJynUvXTkGR1NynAIVP5ZrseMFEIEcrk0cQq9AMI8P%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARABGgwyMzE0MjY4NDY1NzUiDMcN5yMjrl15KYawRCrIA8G1DSce7zv9cO8PvLFHz2AVpmicrzJDbOzynL5hshoxRIUtUDhioxzPFTgx00sL4sWlspqZl%2B7KNXL70wN%2B9XY%2FitKzkwatLQ4JF2hddw9JKOXFG1VdURRtAIb1C88smSN9FHCkErxmfIzKrezSdKxFFjzoLO0GEW2sotqp3drcuO2S0xbPutJCZ4IDOHFJIxQjTmEZB8xG5EcBzTp%2BLoRTzJQvCzStgcxoGAzSN4d5saGexxrKASd9wonY04dm9iakN%2F02a7c7Ug%2FzH6YD8Ym1gG8IuX8EIOj5KVp6Uwv%2F5agBMaY%2BQu3S9ryxySASdcXTWA2AbcNuhLudKGD%2BM%2FH4QXqxNzwMhJsCLkI9numfs6NLMPmmlVyyjn6Y%2BqaWUyk5HcwoCbBQcvIsKdMaLE1x%2Fvj1VmWP%2BrPs3OeMmuOnHhOZ27yGsnSedYEMTda0qngUAOKHDc%2FbIEFxTJFgrhBkm0p%2BclFaQ6sAxnZhlD9Huvax4Ddtwku95fTFTTq2A8oi0kHSa62S4F3GPeO2jyeZ%2FJoA6kJ5KH7FeXI592BfAwS3KjCksf0AU%2FmPl%2BuxfLLGBHv8UH%2F%2BqUQ6mDfepUAlPcl%2BEJdlzjDiyfynBjqlAV%2FN18cW%2Fr2I1quq1IG20aPPTuRIDbIdIxGOJOkF7QYJdKWewHnA8Ad2MJR8lXIQrl3SjEwpfSYp4%2F9R7YAxkm1iRj%2BzbHPvz27P3EZXDX6OqBitdDlrQz9qHtOl0yFJ9MG2r699rtW%2FZf46J7T%2FW%2FCTEBkT82xq6TpHokjPD8wzq%2F7qfViNYkOygvvXPEUDJP9XGsujagU%2BXqO6Nu%2BZzXxMrdhg5Q%3D%3D&Expires=1695064329"')
+system('wget -O /projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/Microglia-PVM_DLPFC.rds "https://datasets.cellxgene.cziscience.com/de0bcfa6-6ef8-456a-ae06-73074503e493.rds"')
+
+
 
 
 #get Full DLPFC and MTG  data####
@@ -214,6 +217,8 @@ endo <- readRDS("outputs/01-SEAAD_data/DLPFC/Endothelial.rds")
 CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24,loadBashrc = T,
                   micromamba_env = 'singlecell')
 RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat',wait_for = 'splitSEAAD')
+
+
 
 
 #create the pseudobulk matrix [TODO]
