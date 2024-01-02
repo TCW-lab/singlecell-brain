@@ -105,6 +105,10 @@ seead_dlpfc
 DefaultAssay(seead_dlpfc) <- "RNA"
 # switch to analyzing the sketched dataset (in-memory)
 DefaultAssay(seead_dlpfc) <- "sketch"
+seead_dlpfc
+seead_dlpfc<-RunPCA(seead_dlpfc)
+seead_dlpfc<-RunUMAP(seead_dlpfc,dims = 1:50)
+DimPlot(seead_dlpfc,group.by = 'SubClass')
 #the following analysis is the same than classicaly, you have a 'sketch' data that can be analyze
 #the results clustering  can then be projects in the full dataset
 #for more see : https://satijalab.org/seurat/articles/seurat5_sketch_analysis 
