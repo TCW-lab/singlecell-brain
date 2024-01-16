@@ -5,7 +5,7 @@ output: html_notebook
 
 
 # Downsampling single Cell Data
-```{r}
+```r
 library(data.table)
 library(Seurat)
 
@@ -15,7 +15,7 @@ library(Seurat)
 
 Here we used the metadata of the object to randomly select 10% of the cells
 
-```{r}
+```r
 pct_keep=0.1
 mtd<-data.table(obj@meta.data,keep.rownames = 'bc')
 mtd[,to_keep:=bc%in%sample(bc,round(.N*pct_keep))]
@@ -26,7 +26,7 @@ objf<-obj[,mtd[(to_keep)]$bc]
 
 If we have some rare cell population, we would like to preserve it in downsampled data. To do that we can add condition : For example take at least 500 cells by cell_type and max 2000 cells,
 
-```{r}
+```r
   pct_keep=0.2
   cell_group='cell_type'
   min_by_group=500
@@ -43,14 +43,14 @@ If we have some rare cell population, we would like to preserve it in downsample
 
 If you have several seurat objects, that need to be merge but downsampled before because of size issue, you can use this script
 
-```{r}
+```r
 files_paths=list.files('../ref-data/SEAAD/MTG/per_celltype/',pattern = '.rds')
 pct_keep=0.2
 cell_group='cell_type'
 min_by_group=500
 max_by_group=2000
   
-brain_downsampled<-Reduce(function(x,y)merge(x,y,merge.dr=c('scVI','umap')),lapply(files_paths,function(fp){
+brain_downsampled<-Reduce(function(x,y)merge(x,y,merge.dr=c('scVI','umap')),lapply(files_paths,function(fp)
   obj<-readRDS(fp)
   mtd<-data.table(obj@meta.data,keep.rownames = 'bc')
   mtd[,to_keep:=bc%in%head(sample(bc,ifelse(.N*pct_keep>min_by_group,round(.N*pct_keep),min_by_group)),max_by_group),
@@ -60,7 +60,7 @@ brain_downsampled<-Reduce(function(x,y)merge(x,y,merge.dr=c('scVI','umap')),lapp
   
   return(objf)
   
-}))
+))
 brain_downsampled
 ```
 
@@ -68,7 +68,7 @@ brain_downsampled
 
 If you do not have a specific cell annotation (cell type, donors..) to use to as cell groups to downsample the objects, you can use build in SeuratV5 function that downsampled object based on a gene expression profile score to conserve rare cell profile (i.e. cell type) warning, here we need to have first [created a Seurat V5 Object]('notebooks/01-convert_SEAAD_h5ad_to_SeuratV5.md')
 
-```{r}
+```r
 rds_path='../ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.rds'
 seead_dlpfc<-readRDS(rds_path)
 DefaultAssay(seead_dlpfc)<-'RNA'
