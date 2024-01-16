@@ -65,27 +65,51 @@ path='/projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nucle
 h5ls(path) #to check how look like the data
 #we want the raw counts matrix which is store in `layers/UMIs`
 data <- open_matrix_anndata_hdf5(path,group = 'layers/UMIs')
+
 #convert the matrix to a BP directory format to store the data efficiently
 write_matrix_dir(
   mat = data,
-  dir = str_replace(path,".h5ad", "_BP")
+  dir = str_replace(path,".h5ad", "2_BP")
 )
 #then open this BP matrix
-mat <- open_matrix_dir(dir = str_replace(path,".h5ad", "_BP"))
+mat <- open_matrix_dir(dir = str_replace(path,".h5ad", "2_BP"))
 
-
+as.matrix(mat[1:10,1:10])
 # Get metadata from the h5ad file
 
-metadata<-GetH5ADCellMetadata(path)
+#metadata<-GetH5ADCellMetadata(path)
+metadata<-fread('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
+metadata[]
+
 table(metadata$Subclass)
 #create Seurat Object
-seead_dlpfc <- CreateSeuratObject(counts = mat, meta.data = metadata)
-
+seead_dlpfc <- CreateSeuratObject(counts = mat, meta.data = data.frame(metadata,row.names ='exp_component_name' ))
+seead_dlpfc
+seead_dlpfc@meta.data
 #Save the seurat object
+
+seead_dlpfc[["RNA"]]$counts <- write_matrix_dir(seead_dlpfc[["RNA"]]$counts, dir = str_replace(path,".h5ad", "_counts_BP"))
+seead_dlpfc <- NormalizeData(seead_dlpfc)
+
+seead_dlpfc[["RNA"]]$data <- write_matrix_dir(seead_dlpfc[["RNA"]]$data, dir = str_replace(path,".h5ad", "_data_BP"))
+
+identical(as(seead_dlpfc[["RNA"]]$counts, "dgCMatrix"), as(seead_dlpfc[["RNA"]]$data, "dgCMatrix"))
+# should return FALSE and does
+
+SaveSeuratRds(
+  object = seead_dlpfc,
+  file = str_replace(path,".h5ad", ".rds"))
+
+seead_dlpfc <- LoadSeuratRds(str_replace(path,".h5ad", ".rds"))
+identical(as(seead_dlpfc[["RNA"]]$counts, "dgCMatrix"), as(seead_dlpfc[["RNA"]]$data, "dgCMatrix"))
+
+# also returns FALSE as expected
+
+
 ?SaveSeuratRds
 SaveSeuratRds(
   object = seead_dlpfc,
-  file = str_replace(path,".h5ad", ".rds")
+  file = str_replace(path,".h5ad", ".rds"),
 )
 
 #'sketch' a subset of cells

@@ -186,37 +186,20 @@ CreateJobForPyFile('scripts/01A-split_per_cell_type2.py',micromamba_env = 'singl
                    nThreads = 16,maxHours = 12)
 RunQsub('scripts/01A-split_per_cell_type2.qsub',job_name = 'splitSEAAD',wait_for = 'getFullSEAAD')
 
-#2) transform each one to Seurat 
+#extract the metdata 
+CreateJobForPyFile('scripts/01Ai-extract_metadata.py',micromamba_env = 'singlecell',
+                   nThreads = 16,maxHours = 12)
+RunQsub('scripts/01Ai-extract_metadata.py',job_name = 'extractMTD')
+
+
+#2) downsampled and transform to Seurat 
 #based on https://mojaveazure.github.io/seurat-disk/articles/convert-anndata.html
 #and https://github.com/mojaveazure/seurat-disk/issues/109#issuecomment-1137806533
 #install.packages('Seurat')
 
-library(Seurat)
-library(SeuratData)
-library(SeuratDisk)
-library(reticulate)
-library(sceasy)
-devtools::install_github("cellgeni/sceasy",force = T)
-# sceasy::convertFormat(h5ad_file, from="anndata", to="seurat",
-#                       outFile='filename.rds')
-#for 1
-#Convert("outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad", dest = "h5seurat", overwrite = TRUE)
-#reticulate::conda_install(envname = 'base','anndata')
-reticulate::use_condaenv('r-reticulate')
-# reticulate::conda_install('r-reticulate','scanpy',channel = 'bioconda')
-# reticulate::conda_install('r-reticulate','pandas=1.5.1')
-
-sceasy::convertFormat('outputs/01-SEAAD_data/DLPFC/Endothelial.h5ad', from="anndata", to="seurat",
-                      outFile='outputs/01-SEAAD_data/DLPFC/Endothelial.rds')
-
-endo <- readRDS("outputs/01-SEAAD_data/DLPFC/Endothelial.rds")
-
-
-#for all 
 #run 01B-
-CreateJobForRfile('scripts/01B-Anndata_to_Seurat.R',nThreads = 16,maxHours = 24,loadBashrc = T,
-                  micromamba_env = 'singlecell')
-RunQsub('scripts/01B-Anndata_to_Seurat.qsub',job_name = 'ToSeurat',wait_for = 'splitSEAAD')
+CreateJobForRfile('scripts/01B-downsampled_to_Seurat.R',nThreads = 16,maxHours = 24)
+RunQsub('scripts/01B-downsampled_to_Seurat.R',job_name = 'ToSeurat',wait_for = 'extractMTD')
 
 
 

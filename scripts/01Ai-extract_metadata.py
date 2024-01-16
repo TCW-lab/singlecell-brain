@@ -37,32 +37,25 @@ from scipy.sparse import csr_matrix
 #get MTG and DLPFC on AWS [on R script]
 #create one h5ad by cell type
 #follow doc of anndata, subseting https://scverse-tutorials.readthedocs.io/en/latest/notebooks/anndata_getting_started.html
+# #DLPFC
+# datapath='/projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad'
+# adata = anndata.read(datapath,backed='r')
+# 
+# adata
+# adata.layers
+# 
+# #check metadata
+# adata.obs.head() #there is so save it in csv.gz
+# adata.obs.to_csv('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz',compression='gzip')
 
-
-#DLPFC
-datapath='/projectnb/tcwlab-load/ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.h5ad'
-adata = anndata.read_h5ad(datapath,backed='r')
-#save anndata by celltype
-ct='Astrocyte'
-celltype=ct.replace(' ','_')
-celltype=celltype.replace('/','-')
-print(celltype)
-filename='outputs/01-SEAAD_data/DLPFC/'+celltype+'.h5ad'
-adata_ct=adata[adata.obs['Subclass']==ct,:].copy(filename=filename)
-adata.file.close()
 
 
 #MTG
 datapath='/projectnb/tcwlab-load/ref-data/SEAAD/MTG/SEAAD_MTG_RNAseq_final-nuclei.2023-07-19.h5ad'
-adata = anndata.read_h5ad(datapath,backed='r')
+adata = anndata.read(datapath,backed='r')
+adata
+adata.layers
 
-#save anndata by celltype
-ct='Astrocyte'
-celltype=ct.replace(' ','_')
-celltype=celltype.replace('/','-')
-print(celltype)
-filename='outputs/01-SEAAD_data/MTG/'+celltype+'.h5ad'
-adata_ct=adata[adata.obs['Subclass']==ct,:].copy(filename=filename)
- 
-adata.file.close()
-
+#save metadata
+adata.obs.head() 
+adata.obs.to_csv('outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_metadata.csv.gz',compression='gzip')

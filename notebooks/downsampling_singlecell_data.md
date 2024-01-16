@@ -5,24 +5,22 @@ editor_options:
   chunk_output_type: inline
 ---
 
-
 # Downsampling single Cell Data
 
-```r
+``` r
 library(data.table)
 setDTthreads(0)
 library(Seurat) 
 
 library(BPCells)
 library(rhdf5)
-
 ```
 
 ## From one Seurat object
 
 Here we used the metadata of the object to randomly select 10% of the cells
 
-```r
+``` r
 pct_keep=0.1
 mtd<-data.table(obj@meta.data,keep.rownames = 'cell_id')
 mtd[,to_keep:=cell_id%in%sample(cell_id,round(.N*pct_keep))]
@@ -33,7 +31,7 @@ objf<-obj[,mtd[(to_keep)]$cell_id]
 
 If we have some rare cell population, we would like to preserve it in downsampled data. To do that we can add condition : For example take at least 500 cells by cell_type and max 2000 cells,
 
-```r
+``` r
   pct_keep=0.2
   cell_group='cell_type'
   min_by_group=500
@@ -118,7 +116,7 @@ brain_downsampled
 
 If you do not have a specific cell annotation (cell type, donors..) to use to as cell groups to downsample the objects, you can use build in SeuratV5 function that downsampled object based on a gene expression profile score to conserve rare cell profile (i.e. cell type) warning, here we need to have first [created a Seurat V5 Object]('notebooks/01-convert_SEAAD_h5ad_to_SeuratV5.md')
 
-```r
+``` r
 rds_path='../ref-data/SEAAD/DLPFC/SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.rds'
 seead_dlpfc<-readRDS(rds_path)
 DefaultAssay(seead_dlpfc)<-'RNA'
@@ -134,6 +132,7 @@ seead_dlpfc
 # switch to analyzing the sketched dataset (in-memory)
 DefaultAssay(seead_dlpfc) <- "sketch"
 ```
-FIXME : it seems that the SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.rds do not contain the count matrix stored correctly, we have to recreate this rds file starting from the BP matrix. 
+
+FIXME : it seems that the SEAAD_DLPFC_RNAseq_final-nuclei.2023-07-19.rds do not contain the count matrix stored correctly, we have to recreate this rds file starting from the BP matrix.
 
 for more information on Sketch analysis using Seurat, see [this seurat vignette](https://satijalab.org/seurat/articles/seurat5_sketch_analysis)
