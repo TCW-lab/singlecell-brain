@@ -48,7 +48,7 @@ If we have some rare cell population, we would like to preserve it in downsample
 
 If you have several seurat objects, that need to be merge but downsampled before because of size issue, you can use this script
 
-```{r}
+```r
 files_paths=list.files('../ref-data/SEAAD/MTG/per_celltype/',pattern = '.rds',full.names = T)
 pct_keep=0.2
 cell_group='cell_type'
@@ -75,7 +75,7 @@ brain_downsampled
 
 If you have several h5ad objects, that need to be merge and transform into one seurat object but downsampled before because of size issue, you can use this script
 
-```{r}
+```r
 #make sure you are using Seurat V4
 #if you already have v5 install, to get back to v4 version:
 # remotes::install_version("SeuratObject", "4.1.4", repos = c("https://satijalab.r-universe.dev", getOption("repos")))
