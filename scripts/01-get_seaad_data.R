@@ -201,9 +201,44 @@ RunQsub('scripts/01Ai-extract_metadata.py',job_name = 'extractMTD')
 CreateJobForRfile('scripts/01B-downsampled_to_Seurat.R',nThreads = 16,maxHours = 24)
 RunQsub('scripts/01B-downsampled_to_Seurat.R',job_name = 'ToSeurat',wait_for = 'extractMTD')
 
+brain_mtg<-readRDS(file = file.path(out,'SEAAD_MTG_43k.rds'))
 
+brain_mtg<-NormalizeData(brain_mtg)
+brain_mtg<-FindVariableFeatures(brain_mtg)
+brain_mtg<-ScaleData(brain_mtg)
+brain_mtg<-RunPCA(brain_mtg)
+brain_mtg<-RunUMAP(brain_mtg,dims = 1:50)
+DimPlot(brain_mtg,group.by = 'Subclass',label = T)
+DimPlot(brain_mtg,group.by = 'Class',label = T)
+
+brain_mtg[['cell_type']]<-sapply(1:ncol(brain_mtg),function(i)ifelse(str_detect(brain_mtg$Class[i],'Glut'),paste0('Exc_',brain_mtg$Subclass[i]),
+                                                                     ifelse(str_detect(brain_mtg$Class[i],'GABA'),paste0('Inh_',brain_mtg$Subclass[i]),brain_mtg$Subclass[i])))
+DimPlot(brain_mtg,group.by = 'cell_type',label = T,label.size = 3.5,repel = T)+NoLegend()
+
+brain_mtg[['RNA']]<-CreateAssayObject(counts = brain_mtg@assays$RNA@counts)
+
+saveRDS(brain_mtg,file = file.path(out,'SEAAD_MTG_43k.rds'))
+
+
+brain_dlpfc<-readRDS(file = file.path(out,'SEAAD_DLPFC_43k.rds'))
+
+brain_dlpfc<-NormalizeData(brain_dlpfc)
+brain_dlpfc<-FindVariableFeatures(brain_dlpfc)
+brain_dlpfc<-ScaleData(brain_dlpfc)
+brain_dlpfc<-RunPCA(brain_dlpfc)
+brain_dlpfc<-RunUMAP(brain_dlpfc,dims = 1:50)
+DimPlot(brain_dlpfc,group.by = 'Subclass',label = T)
+DimPlot(brain_dlpfc,group.by = 'Class',label = T)
+
+brain_dlpfc[['cell_type']]<-sapply(1:ncol(brain_dlpfc),function(i)ifelse(str_detect(brain_dlpfc$Class[i],'Glut'),paste0('Exc_',brain_dlpfc$Subclass[i]),
+                                                                     ifelse(str_detect(brain_dlpfc$Class[i],'GABA'),paste0('Inh_',brain_dlpfc$Subclass[i]),brain_dlpfc$Subclass[i])))
+DimPlot(brain_dlpfc,group.by = 'cell_type',label = T,label.size = 3.5,repel = T)+NoLegend()
+
+brain_dlpfc[['RNA']]<-CreateAssayObject(counts = brain_dlpfc@assays$RNA@counts)
+
+saveRDS(brain_dlpfc,file = file.path(out,'SEAAD_DLPFC_43k.rds'))
 
 
 #create the pseudobulk matrix [TODO]
 
-#create the downsampled data [TODO]
+
