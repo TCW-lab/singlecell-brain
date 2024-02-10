@@ -1,0 +1,221 @@
+#!/bin/bash -l
+#Parameters of the Jobs :
+
+#$-P  tcwlab
+#$-j y
+#$-l h_rt=24:00:00
+#$-o  ./logs/04A-tabix_fragments_files.log
+#$-pe omp 16
+
+
+#Modules to load:
+
+module load samtools
+
+
+#keep track of some information just in case anything goes wrong
+echo "=========================================================="
+echo "Starting on : $(date)"
+echo "Running on node : $(hostname)"
+echo "Current directory : $(pwd)"
+echo "Current job ID : $JOB_ID"
+echo "Current job name : $JOB_NAME"
+if [[ -n "${SGE_TASK_ID}" && $SGE_TASK_ID != "undefined" ]]; then
+    echo "Task index number : $SGE_TASK_ID"
+fi
+if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
+    echo "Total task number : $SGE_TASK_LAST"
+fi
+echo "=========================================================="
+
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12513.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12513.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12514.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12514.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12515.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12515.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12516.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12516.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12517.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12517.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12518.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12518.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12519.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12519.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12520.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12520.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12521.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12521.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12522.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12522.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12524.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12524.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12525.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12525.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12526.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12526.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12527.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12527.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12528.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12528.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12529.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12529.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12530.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12530.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12531.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12531.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12532.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12532.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12533.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12533.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12534.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12534.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12535.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12535.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12536.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12536.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125453.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125453.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125454.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125454.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125455.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125455.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125456.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125456.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125457.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125457.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125458.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125458.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125459.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125459.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125460.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-125460.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12696.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12696.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12697.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12697.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12698.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12698.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12699.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12699.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12700.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12700.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12701.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12701.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12702.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12702.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12703.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12703.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12998.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12998.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12999.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-12999.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13000.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13000.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13001.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13001.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13002.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13002.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13003.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13003.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13004.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13004.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13005.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13005.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13148.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13148.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13150.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13150.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13151.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13151.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13152.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13152.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13153.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13153.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13154.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13154.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13155.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13155.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13156.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13156.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13157.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13157.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13158.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13158.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13159.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13159.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13160.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13160.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13161.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13161.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13162.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13162.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13163.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13163.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13164.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13164.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13165.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13165.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13166.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13166.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13167.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13167.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13168.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13168.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13169.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13169.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13170.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13170.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13171.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13171.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13172.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13172.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13173.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13173.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13174.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13174.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13175.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13175.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13176.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13176.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13177.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13177.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13178.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13178.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13179.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13179.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13180.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13180.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13181.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13181.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13182.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13182.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13183.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13183.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13184.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13184.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13186.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-13186.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8606.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8606.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8607.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8607.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8608.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8608.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8609.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8609.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8610.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8610.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8611.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8611.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8612.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8612.fragments.tsv.gz
+echo "----- Processing of /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8613.fragments.tsv.gz -----"
+tabix -p bed /projectnb/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/snATAC-seq//D19-8613.fragments.tsv.gz
+
+
+
+echo "=========================================================="
+echo "Finished Analysis for job $JOB_ID on : $(date)"
+echo "=========================================================="
+
