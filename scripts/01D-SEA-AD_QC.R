@@ -526,6 +526,96 @@ library(flexmix)
 
 #nFeature, nRNA : 3*IQR 
 #%MT <0.05
+#for 1####
+
+library(Seurat)
+astro<-readRDS('outputs/01-')
+VlnPlot(astro,features =  c('Fraction.mitochondrial.UMIs','Genes.detected','Number.of.UMIs'),combine = F)
+ggsave(fp(out2,ps(ct,'qc_cell_metrics.png')),width = 8,height = 6)
+
+boxres<-boxplot.stats(astro$Number.of.UMIs,coef = 3)
+astro$UMIs.outlier<-colnames(astro)%in%names(boxres$out)
+VlnPlot(astro,features =  'Number.of.UMIs',split.by = 'UMIs.outlier')
+ggsave(fp(out2,ps(ct,'qc_nUMIs.png')),width = 4,height = 6)
+
+VlnPlot(astro,features =  'Number.of.UMIs',split.by = 'UMIs.outlier',group.by = 'Donor.ID',fill.by = 'outlier.cellprop')
+ggsave(fp(out2,ps(ct,'qc_nUMIs_per_donor.png')),width = 10,height = 6)
+
+boxres<-boxplot.stats(astro$Genes.detected,coef = 3)
+astro$Genes.outlier<-colnames(astro)%in%names(boxres$out)
+VlnPlot(astro,features =  'Genes.detected',split.by = 'Genes.outlier')
+ggsave(fp(out2,ps(ct,'qc_nGenes.png')),width = 4,height = 6)
+
+VlnPlot(astro,features =  'Genes.detected',split.by = 'Genes.outlier',group.by = 'Donor.ID',fill.by = 'outlier.cellprop')
+ggsave(fp(out2,ps(ct,'qc_nGenes_per_donor.png')),width = 10,height = 6)
+
+#percent.mt
+#try use MIQC
+#note: posterior cutoff = the posterior probability of a cell being part of the compromised distribution, a number between 0 and 1.
+#Any cells below the appointed cutoff will be marked to keep. Defaults to 0.75.
+#?filterCells
+astro_sce<-as.SingleCellExperiment(astro)
+astro_sce@colData$Genes.detected
+model <- mixtureModel(astro_sce,
+                      subsets_mito_percent = 'Fraction.mitochondrial.UMIs',detected = 'Genes.detected')
+
+model <- flexmix(Fraction.mitochondrial.UMIs ~ Genes.detected, data = astro@meta.data,
+                 k = 2)
+
+intercept1 <- parameters(model, component = 1)[1]
+intercept2 <- parameters(model, component = 2)[1]
+if (intercept1 > intercept2) {
+  compromised_dist <- 1
+  intact_dist <- 2
+}else {
+  intact_dist <- 1
+  compromised_dist <- 2
+}
+
+astro$Mito.outlier <- post[, compromised_dist] > 0.99
+VlnPlot(astro,features =  'Fraction.mitochondrial.UMIs',split.by = 'Mito.outlier')
+FeatureScatter(astro,'Fraction.mitochondrial.UMIs','Genes.detected',group.by ='Mito.outlier' )
+#==> do not use MIQC for scNuc https://github.com/TCW-lab/SingleCell_APOE44/issues/2
+
+boxres<-boxplot.stats(astro$Fraction.mitochondrial.UMIs,coef = 3)
+
+
+astro$Mito.high<-colnames(astro)%in%names(boxres$out)
+VlnPlot(astro,features =  'Fraction.mitochondrial.UMIs',split.by = 'Mito.high')
+ggsave(fp(out2,ps(ct,'qc_Mito.png')),width = 4,height = 6)
+
+VlnPlot(astro,features =  'Fraction.mitochondrial.UMIs',split.by = 'Mito.high',group.by = 'Donor.ID',fill.by = 'outlier.cellprop')
+ggsave(fp(out2,ps(ct,'qc_Mito_per_donor.png')),width = 10,height = 6)
+
+#For scNuc, keep hardthreshold of 5% mito
+astro$Mito.outlier<-astro$Fraction.mitochondrial.UMIs>0.05
+
+#Final outlier is:
+astro$donor.outlier<-astro$outlier #conserved donor outlier metadata compute in previous step
+astro$cell.outlier<-astro$Genes.outlier|astro$UMIs.outlier|astro$Mito.outlier
+
+astro$outlier<-astro$donor.outlier|astro$cell.outlier
+
+message(round(sum(astro$donor.outlier)/nrow(astro),digits = 1),'% cells flagged as donors outliers')
+message(round(sum(astro$cell.outlier)/nrow(astro),digits = 1),'% cells flagged as cells outliers' )
+
+message('In total ',round(sum(astro$outlier)/nrow(astro),digits = 1),'% cells flagged as outliers')
+
+#save the full object
+saveRDS(astro,file)
+
+#create the QCed good quqlity ~10Kcell reduced object 
+celltype_qc<-astro[,!astro$outlier]
+celltype_qc 
+
+#get the top10% donors
+good_qual_donors<-unique(astro$Donor.ID[!astro$outlier&astro$avg.pct.mt<=quantile(astro$avg.pct.mt,0.10)&astro$cell_prop_dev_pc1<=quantile(astro$cell_prop_dev_pc1,0.90)])
+length(good_qual_donors)#12
+celltype_qc_small<-subset(astro,Donor.ID%in%good_qual_donors)
+saveRDS(celltype_qc_small,fp(out2,ps(ct,'_qc_small.rds')))
+
+
+#for all####
 #run 01Diii
 CreateJobForRfile('scripts/01Diii-cell_level_QC.R',nThreads = 28)
 RunQsub('scripts/01Diii-cell_level_QC.R',job_name ='SEACellQC' )

@@ -20,6 +20,8 @@ for(region in c('DLPFC','MTG')){
     message('cells QC of', ct)
     celltype<-readRDS(file)
     
+    celltype$outlier<-celltype$donor.outlier|celltype$cell.outlier
+    saveRDS(celltype,file)
     #create the QCed good quqlity ~10Kcell reduced object 
     celltype_qc<-celltype[,!celltype$outlier]
     celltype_qc 

@@ -80,7 +80,7 @@ for(region in c('DLPFC','MTG')){
     celltype$donor.outlier<-celltype$outlier #conserved donor outlier metadata compute in previous step
     celltype$cell.outlier<-celltype$Genes.outlier|celltype$UMIs.outlier|celltype$Mito.outlier
     
-    celltype$outlier<-celltype$donor.outlier
+    celltype$outlier<-celltype$donor.outlier|celltype$cell.outlier
     
     message(round(sum(celltype$donor.outlier)/nrow(celltype),digits = 1),'% cells flagged as donors outliers')
     message(round(sum(celltype$cell.outlier)/nrow(celltype),digits = 1),'% cells flagged as cells outliers' )
