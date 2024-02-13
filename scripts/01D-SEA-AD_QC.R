@@ -18,7 +18,7 @@ mtd[,PMI:=as.numeric(PMI)]
 var_names<-colnames(mtd)
 setnames(mtd,var_names,make.names(var_names))
 
-#Clinical Traits
+#Clinical Traits####
 mts<-unique(mtd,by=c('Donor.ID'))
 #Age, PMI, ethnicity
 #flag missing info
@@ -30,7 +30,7 @@ mts[,missing.cognitive.status:=Cognitive.Status=='Reference']
 
 
 #age
-mts[!(missing.cognitive.status),age_decade:=factor(paste0(str_extract(Age.at.Death,'^[1-9]'),'0'))]
+mts[!(missing.cognitive.status),age_decade:=paste0(str_extract(Age.at.Death,'^[1-9]'),'0')]
 mts[!(missing.cognitive.status),age_at_death_num:=as.numeric(ifelse(Age.at.Death=='90+',91,Age.at.Death))]
 
 table(mts[!(missing.cognitive.status)]$age_decade,mts[!(missing.cognitive.status)]$Cognitive.Status)
@@ -58,6 +58,7 @@ table(mts[!(missing.cognitive.status)]$Race..choice.White.)
 races_cols<-colnames(mts)[str_detect(colnames(mts),'^Race')]
 races<-str_remove(str_remove(races_cols,'Race..choice.'),'\\.$')
 mts[!(missing.cognitive.status),ethnicity:=paste(races[sapply(.SD,function(x)x=='Checked')],collapse = '_'),by='Donor.ID',.SDcols=races_cols]
+
 table(mts$ethnicity)
 # Asian                                      White White_American.Indian..Alaska.Native_Other                                White_Other 
 # 3                                         74                                          1                                          2 
@@ -72,9 +73,11 @@ mts[,outlier.clinical.status:=missing.cognitive.status|outlier.ethnicity]
 
 mts[(outlier.clinical.status)] #6
 
+#add this information to the main metadata
 mtd<-merge(mtd,mts[,.SD,.SDcols=c('Donor.ID',setdiff(colnames(mts),colnames(mtd)))])
 
-#Cellular/Molecular Traits
+
+#Cellular/Molecular Traits QC####
 #based on %MT
 ggplot(mtd[!(outlier.clinical.status)])+geom_violin(aes(x=Donor.ID,y=Fraction.mitochondrial.UMIs))
 
@@ -85,7 +88,6 @@ mtsc<-unique(mtd,by=c('Donor.ID','main_cell_type'))
 
 ggplot(mtsc[!(outlier.clinical.status)])+
   geom_boxplot(aes(x=main_cell_type,y=avg.pct.mt.ct,fill=Cognitive.Status))+theme_bw()
-
 #no removal because associated to Dementia
 
 
@@ -104,8 +106,8 @@ ggplot(mtsc[!(outlier.clinical.status)])+
   geom_boxplot(aes(x=main_cell_type,y=pct.ct,fill=`Cognitive.Status`),position='dodge')+
   theme_bw()
 
-
-#PCA of the % from IQR
+#Summurize Cell type proportions abnormalities at donor level
+#=> PCA of the % deviation from IQR
 source('../../utils/pca_utils.R')
 
 mtsc[,pct.ct.q25:=quantile(pct.ct,0.25),by='main_cell_type']
@@ -128,6 +130,7 @@ iqr_skew_pca_dt<-PcaPlot(iqr_skew_pca,mts,group.by ='Cognitive.Status',sample_co
 iqr_skew_pca_dt[PC1<(-10)]
 ggplot(iqr_skew_pca_dt)+geom_boxplot(aes(x=Cognitive.Status,y=PC1))
 
+#outlier if sample > 3*IQR of PC1
 iqr_skew_pca_dt[,outlier.cellprop:=PC1%in%boxplot.stats(PC1,coef=3)$out]
 iqr_skew_pca_dt[(outlier.cellprop)]
 
@@ -144,9 +147,6 @@ PcaPlot(iqr_skew_pca,mts,group.by ='Cognitive.Status',
 #                             sample_col = 'Donor.ID',label = iqr_skew_pca_dt$outlier.cellprop.pc2,return_pcs_mtd = T)
 
 ggplot(iqr_skew_pca_dt)+geom_point(aes(x=PC1,y=avg.pct.mt,col=outlier.cellprop))+theme_bw()
-
-
-iqr_skew_pca_dt[(outlier.cellular.status)]$Donor.ID
 
 iqr_skew_pca_dt[,cell_prop_dev_pc1:=PC1]
 
@@ -170,7 +170,12 @@ length(tot.outliers) #12/84
 #save 
 fwrite(mtd,'outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
 
+mts<-RemoveUselessColumns(mts,key_cols=c('Donor.ID'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.|Class|Subclass|Supertype|cell_type')
+
 fwrite(mts,'outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_sample_level_metadata.csv.gz')
+
+
+mtsc<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','main_cell_type'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.|Subclass|Supertype')
 
 fwrite(mtsc,'outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz')
 
@@ -342,9 +347,13 @@ length(tot.outliers) #12/84
 #save 
 fwrite(mtd,'outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_metadata.csv.gz')
 
+mts<-RemoveUselessColumns(mts,key_cols=c('Donor.ID'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.|Class|Subclass|Supertype|cell_type')
 fwrite(mts,'outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_sample_level_metadata.csv.gz')
 
+
+mtsc<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','main_cell_type'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.|Subclass|Supertype')
 fwrite(mtsc,'outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz')
+
 
 #Single Cell Object Creations####
 #generate the per cell type object. 
@@ -517,12 +526,15 @@ library(flexmix)
 
 #nFeature, nRNA : 3*IQR 
 #%MT <0.05
-#+ Create HighQual small rds object by cell type
 #run 01Diii
 CreateJobForRfile('scripts/01Diii-cell_level_QC.R',nThreads = 28)
 RunQsub('scripts/01Diii-cell_level_QC.R',job_name ='SEACellQC' )
 
 
+#+ Create HighQual small rds object by cell type
+#run 01Div
+CreateJobForRfile('scripts/01Div-create_small_QCed_object.R',nThreads = 28)
+RunQsub('scripts/01Div-create_small_QCed_object.R',job_name ='SEACellSmall' )
 
 #Next TODO: how to use/presentation of this dataset
 #+ how to perform pseudobulk Analysis

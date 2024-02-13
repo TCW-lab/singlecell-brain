@@ -90,16 +90,6 @@ for(region in c('DLPFC','MTG')){
     #save the full object
     saveRDS(celltype,file)
     
-    #create the QCed good quqlity ~10Kcell reduced object 
-    celltype_qc<-celltype[,!celltype$outlier]
-    celltype_qc 
-    
-    #get the top10% donors
-    good_qual_donors<-unique(celltype$Donor.ID[!celltype$outlier&celltype$avg.pct.mt<=quantile(celltype$avg.pct.mt,0.10)&celltype$cell_prop_dev_pc1<=quantile(celltype$cell_prop_dev_pc1,0.90)])
-    length(good_qual_donors)#12
-    celltype_qc_small<-subset(celltype,Donor.ID%in%good_qual_donors)
-    saveRDS(celltype_qc_small,fp(out2,ps(ct,'_qc_small.rds')))
-    
     
   }
   

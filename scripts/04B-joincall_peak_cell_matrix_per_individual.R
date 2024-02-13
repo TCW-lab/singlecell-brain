@@ -120,7 +120,7 @@ for(file in fragment_files){
   saveRDS(peaks_mat,fp(out2,'raw_peak_count_matrix.rds'))
   
   peaks_mat<-peaks_mat[,cells]
-  saveRDS(peaks_mat,fp(out2,'raw_peak_count_matrix.rds'))
+  saveRDS(peaks_mat,fp(out2,'filtered_peak_count_matrix.rds'))
   
   
   #4) create signac/seurat object with associated metadata
