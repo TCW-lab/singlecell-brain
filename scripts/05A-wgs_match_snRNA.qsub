@@ -1,0 +1,35 @@
+#!/bin/bash -l
+#Parameters of the Jobs :
+
+#$-P  tcwlab
+#$-j y
+#$-l h_rt=24:00:00
+#$-o  ./logs/05A-wgs_match_snRNA.log
+
+
+# loading of bashrc profile:
+ source $HOME/.bashrc
+
+#keep track of some information just in case anything goes wrong
+echo "=========================================================="
+echo "Starting on : $(date)"
+echo "Running on node : $(hostname)"
+echo "Current directory : $(pwd)"
+echo "Current job ID : $JOB_ID"
+echo "Current job name : $JOB_NAME"
+if [[ -n "${SGE_TASK_ID}" && $SGE_TASK_ID != "undefined" ]]; then
+    echo "Task index number : $SGE_TASK_ID"
+fi
+if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
+    echo "Total task number : $SGE_TASK_LAST"
+fi
+echo "=========================================================="
+
+plink2 --bfile /projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/ref-data/ROSMAP/ROSMAP_NIA_geno/ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc --keep outputs/05-ROSMAP_MIT_WGS//scRNA_WGS_common_samples.tsv --make-bed --out outputs/05-ROSMAP_MIT_WGS//ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc_match_snRNA --threads 8 --new-id-max-allele-len 1000 --set-all-var-ids  chr@:#_\$r_\$a
+
+
+
+echo "=========================================================="
+echo "Finished Analysis for job $JOB_ID on : $(date)"
+echo "=========================================================="
+

@@ -626,32 +626,9 @@ RunQsub('scripts/01Diii-cell_level_QC.R',job_name ='SEACellQC' )
 CreateJobForRfile('scripts/01Div-create_small_QCed_object.R',nThreads = 28)
 RunQsub('scripts/01Div-create_small_QCed_object.R',job_name ='SEACellSmall' )
 
-#add %mito/nUmi outlier in metadata
-mtd<-fread('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
-mtd[,UMIs.outlier:=Number.of.UMIs%in%boxplot.stats(Number.of.UMIs,coef = 3)$out,by='cell_type']
-mtd[,Genes.outlier:=Genes.detected%in%boxplot.stats(Genes.detected,coef = 3)$out,by='cell_type']
-mtd[,Mito.outlier:=Fraction.mitochondrial.UMIs>0.05]
-mtd[,cell.outlier:=Genes.outlier|UMIs.outlier|Mito.outlier]
-mtd[,donor.outlier:=outlier] #conserved donor outlier metadata compute in previous step
-mtd[,outlier:=donor.outlier|cell.outlier] #conserved donor outlier metadata compute in previous step
-
-fwrite(mtd,'outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
-
-mtd<-fread('outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_metadata.csv.gz')
-mtd[,UMIs.outlier:=Number.of.UMIs%in%boxplot.stats(Number.of.UMIs,coef = 3)$out,by='cell_type']
-mtd[,Genes.outlier:=Genes.detected%in%boxplot.stats(Genes.detected,coef = 3)$out,by='cell_type']
-mtd[,Mito.outlier:=Fraction.mitochondrial.UMIs>0.05]
-mtd[,cell.outlier:=Genes.outlier|UMIs.outlier|Mito.outlier]
-mtd[,donor.outlier:=outlier] #conserved donor outlier metadata compute in previous step
-mtd[,outlier:=donor.outlier|cell.outlier] #conserved donor outlier metadata compute in previous step
-nrow(mtd[!(outlier)]) #1 175 960
-fwrite(mtd,'outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_metadata.csv.gz')
-
-#how to use/presentation of this dataset
-
-
-#Next TODO: 
+#Next TODO: how to use/presentation of this dataset
 #+ how to perform pseudobulk Analysis
+#+ in a notebook
 #+ 
 
 
