@@ -30,13 +30,13 @@ wgs_tokeep<-bio[specimenID%in%fam$V2][assay=='wholeGenomeSeq'][comm_inds,on='ind
 fwrite(data.table(0,wgs_tokeep),fp(out,'scRNA_WGS_common_samples.tsv'),sep='\t',col.names = F)
 
 #1)keep only samples overlap with scRNA samples
-genotype_file_match<-fp(out,ps(basename(genotype_file),'_match_snRNA'))
+genotype_file_match<-fp(out,ps(basename(genotype_file),'_match_snRNA.bed'))
 
 cmd_matchwgs<-paste('plink2' ,
                  '--bfile' ,genotype_file ,
                  '--keep',fp(out,'scRNA_WGS_common_samples.tsv'),
                  '--make-bed', 
-                 '--out' ,genotype_file_match,
+                 '--out' ,tools::file_path_sans_ext(genotype_file_match), 
                  '--threads' ,'8',
                  '--new-id-max-allele-len','1000',
                  '--set-all-var-ids ','chr@:#_\\$r_\\$a')

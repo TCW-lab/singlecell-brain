@@ -2,16 +2,16 @@
 out<-'outputs/05-ROSMAP_MIT_WGS/'
 dir.create(out)
 
-source('../../../utils/r_utils.R')
+source('../../utils/r_utils.R')
 genotype_file<-'/projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/ref-data/ROSMAP/ROSMAP_NIA_geno/ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc'
-genotype_file_match<-fp(out,ps(basename(genotype_file),'_match_snRNA'))
+genotype_file_match<-fp(out,ps(basename(genotype_file),'_match_snRNA.bed'))
 
 pipelines<-'/projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/xqtl-pipeline/pipeline/'
 
 analysis_name='ROSMAP-snRNA' 
 
-unrelated_file<-list.files(file.path(out,'kinship'),pattern='unrelated\\.bed$',full.names = T)
-having.related<-length(unrelated_file)>0
+related_file<-list.files(file.path(out,'kinship'),pattern='\\.related\\.fam$',full.names = T)
+having.related<-length(related_file)>0
 
 
 #Functions####

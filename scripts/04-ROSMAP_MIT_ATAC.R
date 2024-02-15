@@ -292,6 +292,43 @@ saveRDS(brain,fp(out,'brain_12best_samples_qc.rds'))
 CreateJobForRfile('scripts/04E-celltype_labeltransfer_from_rna.R',nThreads = 36)
 RunQsub('scripts/04E-celltype_labeltransfer_from_rna.R',job_name = 'TrasferLabelRNA')
 
+#check good annotation
+brain<-readRDS('outputs/04-ROSMAP_MIT_ATAC/brain_12best_samples_qc.rds')
+DefaultAssay(brain)<-'peaks'
+DimPlot(brain,reduction = 'umap',group.by = 'cell_type',label=T,repel = T)
+
+mtd<-data.table(brain@meta.data,keep.rownames = 'cell_id')
+mtd[,main_cell_type:=str_extract(cell_type,'Oligo|Exc|Inh|Astro|Mic|Endo|VLMC|OPC')]
+ggplot(mtd)+geom_bar(aes(x=main_cell_type,fill=main_cell_type))
+
+#top left Exc neurons are far more the main cluster of Exc, poor quaility cells?
+DimPlot(brain,reduction = 'umap',group.by = c('individualID','sequencingBatch','cogdx'))
+
+DimPlot(brain,reduction = 'umap',cells.highlight = WhichCells(brain,expression = individualID=='R9781891'))
+
+#R9181891 sample have a completely different profile of Exc neur chromatin access
+#beacause bad quqlity sample?
+FeaturePlot(brain,reduction = 'umap',features =  c('pct_reads_in_peaks'),label=T,repel = T) #no
+
+FeaturePlot(brain,reduction = 'umap',features =  c('prediction.score.Exc_L5.IT'),label=T,repel = T) #well predicted
+
+brain$logNCount_peaks<-log(brain$nCount_peaks)
+FeaturePlot(brain,reduction = 'umap',features = 'logNCount_peaks') #no
+#FeaturePlot(brain,reduction = 'umap',features = 'nFeature_peaks')
+
+#different brain region??
+mtd[individualID=='R9781891']
+mtd_bio<-fread('~/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/Metadata/MIT_ROSMAP_Multiomics_biospecimen_metadata.csv')
+mtd_bio[individualID=='R9781891']#have scRNA from multiple brain region and cnMultiome from  medial frontal cortex instread of PFC
+table(mtd_bio$individualID)#not specific to hom
+mtd_bio[,tissue.per.donor:=length(unique(tissue)),by='individualID']
+unique(mtd_bio[tissue.per.donor==7]$individualID) #take part of the 4 donors with all brain region
+#guess : this sample coming from a different brainregion. annotated as PFC but inversion when taking/identfying the frozen sample
+#Note . number of snMultiome donors: 
+mtd_bio[assay=='snMultiome']#19 multiome
+#maybe to use to brdge, but come from a different brain region ( medial frontal cortex)
+#so we can transfer data like that
+
 #4) Transfer label to others samples/nuclei ####
 #run 04F
 CreateJobForRfile('scripts/04F-MapSamples.R',nThreads = 36)

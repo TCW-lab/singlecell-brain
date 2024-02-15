@@ -46,10 +46,6 @@ predicted.labels <- TransferData(
 )
 
 brain <- AddMetaData(object = brain, metadata = predicted.labels)
-plot1 <- DimPlot(brain_rna, group.by = 'cell_type', label = TRUE, repel = TRUE) + NoLegend() + ggtitle('scRNA-seq')
-plot2 <- DimPlot(brain, group.by = 'predicted.id', label = TRUE, repel = TRUE) + NoLegend() + ggtitle('scATAC-seq')
-ps<-plot1 + plot2
-ggsave(fp(out,'brain12_labeltransfer_with_seaad_sn_rna.png'),plot = ps,width = 9,height = 7)
 
 # replace each label with its most likely prediction
 for(i in levels(brain)) {

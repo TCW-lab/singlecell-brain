@@ -26,7 +26,7 @@ brain <- RunUMAP(brain, reduction = "lsi", dims = 2:30, return.model = TRUE)
 
 
 
-mtd_anno<-rbindlist(mclapply(signac_files,function(f){
+mtd_anno<-rbindlist(lapply(signac_files[1:3],function(f){
   s<-basename(dirname(f))
   message(s)
   
@@ -62,12 +62,12 @@ mtd_anno<-rbindlist(mclapply(signac_files,function(f){
   
   brain.sample$cell_type<-brain.sample$predicted.id
   
+  
   saveRDS(brain.sample,fp(out,'peak_count_matrices',s,'signac_object.rds'))
   
   return(data.table(brain.sample@meta.data,keep.rownames = 'cell_id'))
-},mc.cores = n_cores_mc))
+}))
 
 mtd<-merge(mtd,mtd_anno[,.(cell_id,libraryID,cell_type)])
 
-fwrite(mtd,'outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
 

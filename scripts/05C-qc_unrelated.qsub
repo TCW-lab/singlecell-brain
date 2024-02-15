@@ -4,12 +4,9 @@
 #$-P  tcwlab-adsp
 #$-j y
 #$-l h_rt=24:00:00
-#$-o  ./logs/05B-kinship.log
-#$-pe omp 28
+#$-o  ./logs/05C-qc_unrelated.log
+#$-pe omp 16
 
-
-# loading of bashrc profile:
- source $HOME/.bashrc
 
 #Micromamba environment activation:
 
@@ -35,8 +32,7 @@ if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
 fi
 echo "=========================================================="
 
-echo "----- Processing of kinship -----"
-sos run /projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/xqtl-pipeline/pipeline//GWAS_QC.ipynb king --cwd outputs/05-ROSMAP_MIT_WGS//kinship --genoFile outputs/05-ROSMAP_MIT_WGS//ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc_match_snRNA.bed --name ROSMAP-snRNA --no-maximize-unrelated --mem 100G -s force --container oras://ghcr.io/cumc/bioinfo_apptainer:latest
+sos run /projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/xqtl-pipeline/pipeline//GWAS_QC.ipynb qc --cwd outputs/05-ROSMAP_MIT_WGS//cache --genoFile outputs/05-ROSMAP_MIT_WGS//ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc_match_snRNA.bed --name ROSMAP-snRNA --mac-filter 5 --mem 80G -s force --container oras://ghcr.io/cumc/bioinfo_apptainer:latest
 
 # Singularity specifics clean up: 
 rm .Rprofile

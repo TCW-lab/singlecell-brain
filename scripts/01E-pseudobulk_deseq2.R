@@ -15,7 +15,7 @@ pseudo_count<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro
 mat<-as.matrix(data.frame(pseudo_count,row.names = 'gene_id'))
 
 mtd<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz')[main_cell_type=='Astro']
-
+fwrite(mtd,'outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro_metadata.csv.gz')
 
 #QC
 #remove samples if flagged as outliers (See QC script) 
@@ -396,3 +396,12 @@ res_merge[,summary(lm(stat.DLPFC~stat.MTG))$adj.r.squared,by='Cognitive.Status']
 #regarding than in MTG only, dementia have a bif effect on transcriptome, 
 #we expect than astro response to dementia is visible in MTG because affected in a later stage of the D., 
 #so MTG brain environment look more DLPFC as this stage
+
+
+#how this new analysis is different from the old one?
+res_merge<-merge(fread(fp(out,"res_pseudobulkDESeq2_APOE4_vs_3_astro_MTG_Cov_sex_braak_atherosclerosis_PMI_ncells_nUmis_LibInput_PCRcycles_avg.mt.csv.gz")),
+                 fread('../juao_autophagy/outputs/01-APOE4_astro_human/res_pseudobulkDESeq2_APOE4_vs_3_astro_Cov_braak_stage_sex_PMI_age_education_avg.mt.csv.gz')[,gene:=hgnc_symbol],
+                 by=c('gene'),suffixes = c(".new", ".old"))
+
+ggplot(res_merge)+geom_point(aes(x=stat.new,y=stat.old),size=0.2) +theme_bw() #quite different, better new
+
