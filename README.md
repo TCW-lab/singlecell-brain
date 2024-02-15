@@ -1,9 +1,10 @@
 # singlecell-brain
 Pipeline to preprocess Human (postmortem) brain single cell data
 
-## Human brain single cell data 
-SEA-AD Data QC/Preprocessing : [notebooks/SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)
+## Human brain single cell data analysis
+SEA-AD Data QC/Preprocessing : [SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)
 
+SEA-AD Astrocyte Pseudobulk Differential Expression analysis : [Pseudobulk_DESeq2_analysis_of_SEAAD_data.ipynb](notebooks/Pseudobulk_DESeq2_analysis_of_SEAAD_data.ipynb)
 
 ## Documentations
 
