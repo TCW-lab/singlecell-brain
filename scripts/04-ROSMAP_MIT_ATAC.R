@@ -336,15 +336,340 @@ RunQsub('scripts/04F-MapSamples.R',job_name = 'MapSamples',wait_for ='TrasferLab
 
 
 
-#4)cell type level peak calling
-#split object per cell type then peak call per groups of donors
-#group of donors (to increase number of cells), group according to KNN/SNN celltype spe PCA of celltype spe peak count matrix
-#so in any case, need  cellspe peak count matrix first on top20% donors
-#then per groups of donors peak calling (group can be different depending of cell type)
+
+#5) flag sample outliers, ####
+# annotate main celltype 
+mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
+mtd
+
+mtd[,main_cell_type:=str_extract(cell_type,'Oligo|Exc|Inh|Astro|Mic|Endo|VLMC|OPC')]
+mtd[,main_cell_type:=factor(main_cell_type,levels = c('Exc','Inh','Oligo','Astro','OPC','Mic','VLMC','Endo'))]
+table(mtd$main_cell_type)
+
+# Exc    Inh  Oligo  Astro    OPC    Mic   VLMC   Endo 
+# 168288  53321 161413  23174  13445  13762   6908      0 
+ggplot(mtd)+
+  geom_bar(aes(x=main_cell_type,fill=main_cell_type),position='dodge')+theme_bw()
 
 
-#5) pseudobulk peak count creation
+#i)Clinical Status
+mts<-unique(mtd,by=c('libraryID'))
+#Age, PMI, ethnicity
+#flag missing info
+table(mts$cogdx)
+ggplot(mts)+geom_bar(aes(x=cogdx,fill=as.factor(cogdx)))+theme_bw( )
+mts[,cognitive_status:=ifelse(cogdx==1,'NL',ifelse(cogdx%in%c(2,3),'MCI','AD'))]
+ggplot(mts)+geom_bar(aes(x=cognitive_status,fill=cognitive_status))+theme_bw( )
+
+#APOE
+table(mts$apoe_genotype) #2 44
+# 23 24 33 34 44 
+#  9  3 62 16  2 
+mts[,apoe4:=apoe_genotype%in%c(34,44,24)]
+mts[,apoe2:=apoe_genotype%in%c(24,23,22)]
+
+mts[,outlier.apoe:=apoe4&apoe2]
+
+ggplot(mts)+
+  geom_bar(aes(x=as.factor(apoe_genotype),fill=cognitive_status))+theme_bw() 
+
+ggplot(mts)+geom_boxplot(aes(x=as.factor(apoe_genotype),y=age_at_death_num,fill=as.factor(apoe_genotype)))+theme_bw()
 
 
-#6) test a first experiment
+#age
+mts[,age_decade:=paste0(str_extract(age_death,'^[1-9]'),'0')]
+mts[,age_at_death_num:=as.numeric(ifelse(age_death=='90+',91,age_death))]
+
+table(mts$age_decade,mts[]$cognitive_status)
+  #    AD MCI NL
+  # 70  3   3  5
+  # 80 24   8 20
+  # 90  7   9 13
+
+ggplot(mts)+geom_boxplot(aes(x=cognitive_status,y=age_at_death_num,fill=cognitive_status))+theme_bw()
+ggplot(mts)+geom_boxplot(aes(y=age_at_death_num)) #ok
+
+
+#PMI
+ggplot(mts)+geom_boxplot(aes(x=cognitive_status,y=pmi,fill=cognitive_status))+theme_bw() #MCI have bigger PMI, to take into account in analysis
+
+#ethnicity
+table(mts$race)
+# 1  2 
+# 91  1 
+
+mts[,ethnicity:=ifelse(race==1,'White',ifelse(race==2,'Black or African American',NA))]
+
+table(mts$ethnicity)
+# Black or African American                     White 
+# 1                        91 
+ggplot(mts)+
+  geom_bar(aes(x=ethnicity,fill=cognitive_status))+theme_bw() 
+
+mts[,outlier.ethnicity:=ethnicity=='Black or African American']
+
+mts[,outlier.clinical.status:=outlier.ethnicity|outlier.apoe]
+mts[(outlier.clinical.status)] #4
+
+#add this information to the main metadata
+mtd<-merge(mtd,
+           mts[,.SD,.SDcols=c('libraryID',setdiff(colnames(mts),colnames(mtd)))],by='libraryID')
+
+
+
+#ii) Cellular/Molecular Traits QC
+
+#based on %read in peak
+ggplot(mtd)+geom_violin(aes(x=libraryID,y=pct_reads_in_peaks))
+mtd[,med.n_tot_fragment:=median(n_tot_fragments),by=.(libraryID)]
+mtd[,med.n_tot_fragment.ct:=median(n_tot_fragments),by=.(libraryID,main_cell_type)]
+
+mtd[,avg.pct.read.in.peak:=mean(`pct_reads_in_peaks`),by=c('libraryID')]
+mtd[,avg.pct.read.in.peak.ct:=mean(`pct_reads_in_peaks`),by=c('libraryID','main_cell_type')]
+
+mtd[,med.tss.enrich:=median(`pct_reads_in_peaks`),by=c('libraryID')]
+mtd[,med.tss.enrich.ct:=median(`pct_reads_in_peaks`),by=c('libraryID','main_cell_type')]
+
+mtd[,med.nucleosome_signal:=median(`nucleosome_signal`),by=c('libraryID')]
+mtd[,med.nucleosome_signal.ct:=median(`nucleosome_signal`),by=c('libraryID','main_cell_type')]
+
+mtsc<-unique(mtd,by=c('libraryID','main_cell_type'))
+mts<-unique(mtd,by=c('libraryID'))
+ggplot(mts)+
+  geom_boxplot(aes(x=cognitive_status,y=med.n_tot_fragment,fill=cognitive_status))+theme_bw()
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=med.n_tot_fragment.ct,fill=cognitive_status))+theme_bw()
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=med.n_tot_fragment.ct,fill=as.factor(apoe_genotype)))+theme_bw()
+
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=avg.pct.read.in.peak.ct,fill=cognitive_status))+theme_bw()
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=as.factor(apoe_genotype),
+                   y=avg.pct.read.in.peak.ct,fill=as.factor(apoe_genotype)))+theme_bw()+
+  facet_wrap('main_cell_type')
+
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=med.tss.enrich.ct,fill=cognitive_status))+theme_bw()
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=as.factor(apoe_genotype),
+                   y=med.tss.enrich.ct,fill=as.factor(apoe_genotype)))+theme_bw()+
+  facet_wrap('main_cell_type')
+
+
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=as.factor(apoe_genotype),
+                   y=med.nucleosome_signal.ct,fill=as.factor(apoe_genotype)))+theme_bw()+
+  facet_wrap('main_cell_type')
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=med.nucleosome_signal.ct,fill=cognitive_status))+theme_bw()
+
+#no removal because associated to Dementia
+
+
+#based on Cellular Distribution
+#Cell Distribution
+ggplot(mtd)+
+  geom_bar(aes(x=main_cell_type,fill=main_cell_type),position='dodge')+
+  facet_wrap(~libraryID)+theme_bw()
+
+mtd[,n.cells:=.N,by=.(`libraryID`)]
+mtd[,pct.ct:=.N/n.cells,by=.(`libraryID`,main_cell_type)]
+mtd[,n.ct:=.N,by=.(`libraryID`,main_cell_type)]
+mtd[,n.ct.all:=.N,by=.(main_cell_type)]
+
+
+mtsc<-unique(mtd,by=c('libraryID','main_cell_type'))
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=pct.ct,fill=`cognitive_status`),position='dodge')+
+  theme_bw()
+
+ggplot(mtsc)+
+  geom_boxplot(aes(x=main_cell_type,y=pct.ct,fill=apoe4),position='dodge')+
+  theme_bw()
+
+
+#Summurize Cell type proportions abnormalities at donor level
+#=> PCA of the % deviation from IQR
+source('../../utils/pca_utils.R')
+mtsc[,pct.ct.q25:=quantile(pct.ct,0.25),by='main_cell_type']
+mtsc[,pct.ct.q75:=quantile(pct.ct,0.75),by='main_cell_type']
+
+mtsc[,pct.ct.IQR:=pct.ct.q75-pct.ct.q25]
+mtsc[pct.ct<pct.ct.q25,pct.from.IQR:=(pct.ct.q25-pct.ct)/pct.ct.IQR]
+mtsc[pct.ct>pct.ct.q75,pct.from.IQR:=(pct.ct-pct.ct.q75)/pct.ct.IQR]
+mtsc[is.na(pct.from.IQR),pct.from.IQR:=0]
+#    Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+# 0.000000  0.000000  0.003323  0.327975  0.362668 13.114971 
+
+iqr_skew_mat<-dcast(mtsc,libraryID~main_cell_type,value.var = 'pct.from.IQR')
+iqr_skew_pca<-RunPca(t(data.frame(iqr_skew_mat,row.names = 'libraryID')),scale = T)
+iqr_skew_pca$x
+
+iqr_skew_pca_dt<-PcaPlot(iqr_skew_pca,mts,group.by ='cognitive_status',sample_col = 'libraryID',return_pcs_mtd = T)
+ggplot(iqr_skew_pca_dt)+geom_boxplot(aes(x=cognitive_status,y=PC1))
+
+#outlier if sample > 3*IQR of PC1
+iqr_skew_pca_dt[,outlier.cellprop:=PC1%in%boxplot.stats(PC1,coef=3)$out]
+iqr_skew_pca_dt[(outlier.cellprop)]
+
+PcaPlot(iqr_skew_pca,mts,group.by ='cognitive_status',
+        sample_col = 'libraryID',label = iqr_skew_pca_dt$outlier.cellprop)
+
+ggplot(mtd[libraryID%in%iqr_skew_pca_dt[(outlier.cellprop)]$libraryID])+
+  geom_bar(aes(x=main_cell_type,fill=main_cell_type),position='dodge')+
+  facet_wrap(~libraryID)+theme_bw() #samples with very high Oligo /Very low Exc Neu
+
+iqr_skew_pca_dt[,cell_prop_dev_pc1:=PC1]
+
+
+mtsc<-merge(mtsc,iqr_skew_pca_dt[,.(libraryID,outlier.cellprop,cell_prop_dev_pc1,outlier.cellular.status)])
+mtd<-merge(mtd,iqr_skew_pca_dt[,.(libraryID,outlier.cellprop,cell_prop_dev_pc1,outlier.cellular.status)])
+unique(mtd[(outlier.cellprop)],by='libraryID')
+      
+#based on chromatin profile
+#UMAP
+umap_coords<-rbindlist(lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
+                                        full.names = T,recursive = F), function(d){
+                                          s<-basename(d)
+                                          f<-fp(d,'signac_object.rds')
+                                          sign<-readRDS(f)
+                                          data.table(sign@reductions$ref.umap@cell.embeddings,keep.rownames = 'cell_id')[,libraryID:=s]
+                                          
+                                        }))
+mtd<-merge(mtd,umap_coords,by=c('cell_id','libraryID'))
+
+ggplot(mtd)+geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=cell_type),size=0.2)+theme_bw()
+ggplot(mtd)+geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=main_cell_type),size=0.2)+theme_bw()
+ggplot(mtd)+geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=libraryID),size=0.2)+theme_bw()+NoLegend()
+table(mtd[refUMAP_1<(-5)&refUMAP_2>(7.5)]$libraryID)
+exc.donor.outlier<-names(which(table(mtd[refUMAP_1<(-5)&refUMAP_2>(7.5)]$libraryID)>50))
+ggplot(mtd[libraryID%in%exc.donor.outlier&main_cell_type=='Exc'])+
+  geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=cell_type),size=0.2)+
+  theme_bw()+facet_wrap('libraryID')
+
+#flag as outlier D19-12532 and flag all Exc cells cluster as outlier
+
+ggplot(mtd)+
+  geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=cell_type),size=0.2)+
+  theme_bw()+geom_hline(yintercept = 7)+geom_vline(xintercept = -5)
+
+table(mtd[refUMAP_1<(-5)&refUMAP_2>7]$cell_type)
+
+mtd[,exc.donor.outlier:=libraryID=='D19-12532']
+mtd[,exc.cells.outlier:=refUMAP_1<(-5)&refUMAP_2>7]
+
+#oligo outlier
+table(mtd[refUMAP_1>4&refUMAP_2>7.5]$cell_type)
+table(mtd[refUMAP_1>4&refUMAP_2>7.5]$libraryID) #mainly D19-125455
+
+ggplot(mtd[libraryID=='D19-125455'&main_cell_type=='Oligo'])+
+  geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=cell_type),size=0.2)+
+  theme_bw()+facet_wrap('libraryID') #have some 'normal' oligo
+
+ggplot(mtd)+
+  geom_point(aes(x=refUMAP_1,y=refUMAP_2,col=cell_type),size=0.2)+
+  theme_bw()+facet_wrap('libraryID')+facet_wrap(~libraryID=='D19-125455') #seems pretty normal for other cell type
+
+mtd[libraryID=='D19-125455']
+table(mts$spanish)
+#do not seems specifc known phenotype. flag as oligo.outlier
+mtd[,oligo.donor.outlier:=libraryID=='D19-125455']
+mtd[,oligo.cells.outlier:=refUMAP_1>4&refUMAP_2>7.5]
+
+
+#final donors outliers
+mtd[,outlier.cellular.status:=outlier.cellprop|oligo.donor.outlier|exc.donor.outlier]
+
+mtd[,donor.outlier:=outlier.cellular.status|outlier.clinical.status]
+
+mts<-unique(mtd,by=c('libraryID'))
+tot.outliers<-mts[(donor.outlier)]$libraryID
+length(tot.outliers) #12/92
+
+#save 
+fwrite(mtd,fp(out,'all_final_ATACseq_nuclei_metadata.csv.gz'))
+
+mtsc<-UniqueClean(mtd,key_cols=c('libraryID','main_cell_type'),pattern_to_exclude = 'cell_id')
+
+fwrite(mtsc,fp(out,'all_final_ATACseq_nuclei_main_cell_type_level_metadata.csv.gz'))
+
+mts<-UniqueClean(mtsc,key_cols=c('libraryID'),pattern_to_exclude = 'cell_type')
+
+fwrite(mts,fp(out,'all_final_ATACseq_nuclei_sample_level_metadata.csv.gz'))
+
+
+
+#6)cell type level peak calling####
+#peak call in the good quality top20%nuclei, and produce the faeture matrix for every samples
+#to then QC nuclei according to these peaks
+#peak call
+CreateJobForRfile('scripts/04G-PeakCallCellType.R',nThreads = 28)
+RunQsub('scripts/04G-PeakCallCellType.R',job_name = 'CellTypePeak')
+
+#check how many new peak
+peaks<-readRDS(fp(out,'brain_12best_samples_qc_celltype_peaks.rds'))
+
+peaks_dt<-data.table(as.data.frame(peaks))
+peaks_dt[,peaks:=paste(seqnames,start,end,sep="-")]
+peaks_dt[,chr:=seqnames]
+peaks_dt<-Reduce(rbind,lapply(str_replace(unique(brain$predicted.id),"/","_"), function(x){
+  ocrs<-peaks_dt[str_detect(peak_called_in,x)]
+  return(ocrs[,cell_type:=x][,-'peak_called_in'])
+}))
+peaks_dt[,n.ct:=.N,by="peaks"]
+
+fwrite(brain,fp(out,"brain_12best_samples_qc_celltype_peaks.csv.gz"))
+
+#feature matrix for all samples
+CreateJobForRfile('scripts/04Gi-CountPerSample.R',nThreads = 36)
+RunQsub('scripts/04Gi-CountPerSample.R',job_name = 'CTPeakCount',wait_for ='CellTypePeak' )
+
+
+#7) merge sample object per main cell type, ####
+#
+#for one
+mtd<-fread(fp(out,'all_final_ATACseq_nuclei_metadata.csv.gz'))
+unique(mtsc[,.(main_cell_type)])
+astro_list<-lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
+                             full.names = T,recursive = F)[1:2], function(d){
+                               s<-basename(d)
+                               f<-fp(d,'signac_object.rds')
+                               brain<-readRDS(f)
+                               brain<-AddMetaData(brain,data.frame(mtd[libraryID==s],row.names = 'cell_id'))
+                               brain<-RenameCells(brain,add.cell.id =s)
+                               brain<-SplitObject(brain,split.by='main_cell_type')[['Astro']]
+                               return(brain)
+                             })
+astro_list
+astro<-merge(astro_list[[1]],astro_list[2:length(astro_list)], merge.dr = c('ref.lsi','ref.umap'),merge.data=FALSE)
+saveRDS(astro,fp(out,'Astro.rds'))
+
+#for all
+CreateJobForRfile('scripts/04H-MergeMainCellType.R',nThreads = 28)
+RunQsub('scripts/04H-MergeMainCellType.R',job_name = 'mergeMain')
+
+
+#8) cell type level QC : 
+
+
+#9)DonorsGroups-cell type level peak calling####
+# to increase discovery of subpop specific peak, call per groups of donors (non outliers donors only).
+# for each celltype group donors according to KNN/SNN celltype spe PCA of celltype spe peak count matrix
+# (group can be different depending of cell type)
+
+
+#10) pseudobulk peak count creation
+
+
+#11) test a first experiment
 

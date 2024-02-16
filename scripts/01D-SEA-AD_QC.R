@@ -3,7 +3,7 @@ out<-'outputs/01-SEAAD_data/'
 dir.create(out)
 #QC SEA-AD####
 #DLPFC
-#1) Flag outliers donors
+#0) annotate main celltype
 mtd<-fread('outputs/01-SEAAD_data/DLPFC/all_final_RNAseq_nuclei_metadata.csv.gz')
 mtd
 mtd[,cell_type:=ifelse(str_detect(Class,'Glut'),paste0('Exc_',Subclass),
@@ -13,6 +13,10 @@ mtd[,main_cell_type:=str_extract(cell_type,'Oligo|Exc|Inh|Astro|Mic|Endo|VLMC|OP
 mtd[,main_cell_type:=factor(main_cell_type,levels = c('Exc','Inh','Oligo','Astro','OPC','Mic','VLMC','Endo'))]
 mtd[,PMI:=as.numeric(PMI)]
 
+ggplot(mtd)+
+  geom_bar(aes(x=main_cell_type,fill=main_cell_type),position='dodge')+theme_bw()
+
+#1) Flag outliers donors
 
 #convert column name to minuscule and without space
 var_names<-colnames(mtd)
@@ -355,7 +359,7 @@ mtsc<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','main_cell_type'),pattern_
 fwrite(mtsc,'outputs/01-SEAAD_data/MTG/all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz')
 
 
-#Single Cell Object Creations####
+#Single Cell Object and Pseudobulk data Creations####
 #generate the per cell type object. 
 unique(mtd$Supertype)
 #run 01Di-
@@ -379,7 +383,7 @@ RunQsub('scripts/01Dii-create_pseudobulk_cell_type.R',wait_for = 'SEActSeur',job
 
 #merge the sets, create metadata by cell type, aggregate by main cell type, create metdata by main cell type
 
-
+#1) merge the sets
 for(region in c('DLPFC','MTG')){
   print(region)
   out1<-fp(out,region)
@@ -391,7 +395,6 @@ for(region in c('DLPFC','MTG')){
   
 
   
-  #1) merge the sets
   mtsc<-unique(mtd,by=c('Donor.ID','cell_type'))
   
   pseudo_files<-list.files(out1,pattern = '\\_pseudobulk\\.csv\\.gz',full.names = T)
@@ -429,32 +432,38 @@ for(region in c('DLPFC','MTG')){
   #remove sets
   system(paste('rm',paste(pseudo_files_dt[n_file>1]$file,collapse = ' ')))
   
+}
   
-  #2) create mtd for each pseudobulk 
-  
+#2) create mtd for each pseudobulk 
+for(region in c('DLPFC','MTG')){
+  print(region)
+  out1<-fp(out,region)
+  mtd<-fread(fp(out1,'all_final_RNAseq_nuclei_metadata.csv.gz'))
   mtd[,tot.cells.donor:=.N,by=.(`Donor.ID`)]
   mtd[,n.cells:=.N,by=.(`Donor.ID`,cell_type)]
-  
   mtd[,prop.cells:=n.cells/tot.cells.donor,by=.(`Donor.ID`,cell_type)]
   
   mtd[,med.umis.per.cell:=median(Number.of.UMIs,na.rm = T),by=.(`Donor.ID`,cell_type)]
   mtd[,med.genes.per.cell:=median(Genes.detected,na.rm = T),by=.(`Donor.ID`,cell_type)]
-  
   mtd[,avg.pct.mt.per.cell:=mean(`Fraction.mitochondrial.UMIs`),by=c('Donor.ID','cell_type')]
   
   mtsc<-unique(mtd,by=c('Donor.ID','cell_type'))
   
   #flag donors with not enough cells
-  mtd[,pass.threshold.n.cells:=n.cells>50]
-  mtd[,outlier.n.cells:=!pass.threshold.n.cells,by=c('Donor.ID','cell_type')]
+  mtsc[,pass.threshold.n.cells:=n.cells>50]
+  mtsc[,outlier.n.cells:=!pass.threshold.n.cells]
   
   mtscf<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','cell_type'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.')
   
-  
   fwrite(mtscf,fp(out1,'all_final_RNAseq_nuclei_cell_type_level_metadata.csv.gz'))
+}
+
+#3) merge by main_cell_type
+for(region in c('DLPFC','MTG')){
+  print(region)
+  out1<-fp(out,region)
+  mtd<-fread(fp(out1,'all_final_RNAseq_nuclei_metadata.csv.gz'))
   
-  
-  #3) merge by main_cell_type
   out2<-fp(out1,'pseudobulk_main_cell_type')
   dir.create(out2)
   pseudo_files<-list.files(out1,pattern = '\\_pseudobulk\\.csv\\.gz',full.names = T)
@@ -487,31 +496,46 @@ for(region in c('DLPFC','MTG')){
     fwrite(data.table(pseudo_merge,keep.rownames = 'gene_id'),fp(out2,paste0(ct,'.csv.gz')))
     
     
-    #4) create mtd for each pseudobulk main cell type 
-
-    mtd[,tot.cells.donor:=.N,by=.(`Donor.ID`)]
-    mtd[,n.cells:=.N,by=.(`Donor.ID`,main_cell_type)]
-    
-    mtd[,prop.cells:=n.cells/tot.cells.donor,by=.(`Donor.ID`,main_cell_type)]
-    
-    mtd[,med.umis.per.cell:=median(Number.of.UMIs,na.rm = T),by=.(`Donor.ID`,main_cell_type)]
-    mtd[,med.genes.per.cell:=median(Genes.detected,na.rm = T),by=.(`Donor.ID`,main_cell_type)]
-    
-    mtd[,avg.pct.mt.per.cell:=mean(`Fraction.mitochondrial.UMIs`),by=c('Donor.ID','main_cell_type')]
-    
-    mtsc<-unique(mtd,by=c('Donor.ID','main_cell_type'))
-    
-    #flag donors with not enough cells
-    mtd[,pass.threshold.n.cells:=n.cells>50,by=]
-    mtd[,outlier.n.cells:=!pass.threshold.n.cells,by=c('Donor.ID','main_cell_type')]
-    
-    mtscf<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','main_cell_type'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.')
-    
-    
-    fwrite(mtscf,fp(out2,'all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz'))
-    
   }
 }
+  
+#4) create mtd for each pseudobulk main cell type 
+for(region in c('DLPFC','MTG')){
+  print(region)
+  out1<-fp(out,region)
+  mtd<-fread(fp(out1,'all_final_RNAseq_nuclei_metadata.csv.gz'))
+  out2<-fp(out1,'pseudobulk_main_cell_type')
+  dir.create(out2)
+  
+  
+  mtd[,tot.cells.donor:=.N,by=.(`Donor.ID`)]
+  mtd[,n.cells:=.N,by=.(`Donor.ID`,main_cell_type)]
+  
+  mtd[,prop.cells:=n.cells/tot.cells.donor,by=.(`Donor.ID`,main_cell_type)]
+  
+  mtd[,med.umis.per.cell:=median(Number.of.UMIs,na.rm = T),by=.(`Donor.ID`,main_cell_type)]
+  mtd[,med.genes.per.cell:=median(Genes.detected,na.rm = T),by=.(`Donor.ID`,main_cell_type)]
+  
+  mtd[,avg.pct.mt.per.cell:=mean(`Fraction.mitochondrial.UMIs`),by=c('Donor.ID','main_cell_type')]
+  
+  mtsc<-unique(mtd,by=c('Donor.ID','main_cell_type'))
+  #flag donors with not enough cells
+  mtsc[,pass.threshold.n.cells:=n.cells>50,by=c('Donor.ID','main_cell_type')]
+  mtsc[,outlier.n.cells:=!pass.threshold.n.cells,by=c('Donor.ID','main_cell_type')]
+  
+  mtscf<-RemoveUselessColumns(mtsc,key_cols=c('Donor.ID','main_cell_type'),pattern_to_exclude = 'ATAC|Multiome|Doublet|Number.of|Genes.')
+  
+  fwrite(mtscf,fp(out2,'all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz'))
+  
+  for(ct in unique(mtscf$main_cell_type)){
+    
+    fwrite(mtscf[main_cell_type==ct],fp(out2,paste0(ct,'_metadata.csv.gz')))
+    
+  }
+  
+}
+
+
 
 #Cell Level QC####
 # BiocManager::install("flexmix")

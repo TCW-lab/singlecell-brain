@@ -56,7 +56,7 @@ covs_to_check<-list(categorical=c('batch_vendor_name','method',
 
 factor_of_int<-'APOE4.Status'
 
-res_cor_fctr<-rbindlist(lapply(setdiff(covs_to_check$nums,factor_of_int), function(f){
+res_cor_fctr_num<-rbindlist(lapply(setdiff(covs_to_check$nums,factor_of_int), function(f){
   mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
   summstats<-summary(mod)
   data.table(factor=f,
@@ -64,9 +64,19 @@ res_cor_fctr<-rbindlist(lapply(setdiff(covs_to_check$nums,factor_of_int), functi
              beta=summstats$coefficients[2,1],
              R2=summstats$adj.r.squared)
 }))
-res_cor_fctr[p<0.05] #asso with braak.num, thal score, which is expected
+res_cor_fctr_cat<-rbindlist(lapply(setdiff(covs_to_check$categorical,factor_of_int), function(f){
+  mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
+  summstats<-summary(mod)
+  data.table(factor=f,
+             p=anova(mod)$Pr[1],
+             R2=summstats$adj.r.squared)
+}))
 
+res_cor_fctr<-rbind(res_cor_fctr_num,res_cor_fctr_cat,fill=TRUE)
 
+res_cor_fctr[,p_sig:=ifelse(p<0.001,'***',ifelse(p<0.01,'**',ifelse(p<0.05,'*','')))] 
+res_cor_fctr
+fwrite(res_cor_fctr,fp(out,'astrocyte_DLPFC_apoe4_others_covariates_association.csv'))
 #we then perform a PCA to assess influence of each covariates in the main transcriptome variance
 #based on that, we could choose for which technical covariates or putative confounding bioligical factor to correct for
 #scale the data using a variance stabilizing transformation (vst)to UMI count data using a regularized Negative Binomial regression model.

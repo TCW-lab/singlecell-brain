@@ -1,7 +1,7 @@
 out<-'outputs/05-ROSMAP_MIT_WGS/'
 dir.create(out)
 
-source('../../../utils/r_utils.R')
+source('../../utils/r_utils.R')
 genotype_file<-'/projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/ref-data/ROSMAP/ROSMAP_NIA_geno/ROSMAP_NIA_WGS.leftnorm.bcftools_qc.plink_qc'
 
 pipelines<-'/projectnb/tcwlab-adsp/member/adpelle1/projects/fungen-xqtl/xqtl-pipeline/pipeline/'
@@ -28,6 +28,9 @@ comm_inds<-intersect(bio[specimenID%in%fam$V2][assay=='wholeGenomeSeq']$individu
 
 wgs_tokeep<-bio[specimenID%in%fam$V2][assay=='wholeGenomeSeq'][comm_inds,on='individualID']$specimenID
 fwrite(data.table(0,wgs_tokeep),fp(out,'scRNA_WGS_common_samples.tsv'),sep='\t',col.names = F)
+
+mtd_match<-bio[specimenID%in%fam$V2][assay=='wholeGenomeSeq'][comm_inds,on='individualID'][,.(specimenID,individualID)]
+fwrite(mtd_match,fp(out,'scRNA_WGS_samples_and_individual_id.tsv'),sep='\t',col.names = F)
 
 #1)keep only samples overlap with scRNA samples
 genotype_file_match<-fp(out,ps(basename(genotype_file),'_match_snRNA.bed'))
@@ -88,8 +91,10 @@ pca<-readRDS(unrelated_pca_model)
 pca_dt<-fread(str_replace(unrelated_pca_model,'rds$','txt'))
 
 ggplot(pca_dt)+geom_point(aes(x=PC1,y=PC2))
-ps<-lapply(1.5:10*2,function(i)ggplot(pca_dt)+geom_point(aes_string(x=paste0('PC',i),y=paste0('PC',i+1)),size=0.5))
+ps<-lapply(1.5:10*2,function(i)ggplot(pca_dt)+
+             geom_point(aes_string(x=paste0('PC',i),y=paste0('PC',i+1)),size=0.5))
 wrap_plots(ps)
+
 
 #see screeplot
 sum(pca$pca_model$pve)
@@ -105,7 +110,5 @@ p2<-ggplot(data.frame(PC=1:length(pca$pca_model$pve),PVE=pca$pca_model$pve),
 
 p1+p2
 ggsave(fp(out,'scree_plot.png'))
-
-
 
 
