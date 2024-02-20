@@ -616,30 +616,39 @@ fwrite(mts,fp(out,'all_final_ATACseq_nuclei_sample_level_metadata.csv.gz'))
 CreateJobForRfile('scripts/04G-PeakCallCellType.R',nThreads = 28)
 RunQsub('scripts/04G-PeakCallCellType.R',job_name = 'CellTypePeak')
 
-#check how many new peak
-peaks<-readRDS(fp(out,'brain_12best_samples_qc_celltype_peaks.rds'))
-
-peaks_dt<-data.table(as.data.frame(peaks))
-peaks_dt[,peaks:=paste(seqnames,start,end,sep="-")]
-peaks_dt[,chr:=seqnames]
-peaks_dt<-Reduce(rbind,lapply(str_replace(unique(brain$predicted.id),"/","_"), function(x){
-  ocrs<-peaks_dt[str_detect(peak_called_in,x)]
-  return(ocrs[,cell_type:=x][,-'peak_called_in'])
-}))
-peaks_dt[,n.ct:=.N,by="peaks"]
-
-fwrite(brain,fp(out,"brain_12best_samples_qc_celltype_peaks.csv.gz"))
-
 #feature matrix for all samples
 CreateJobForRfile('scripts/04Gi-CountPerSample.R',nThreads = 36)
 RunQsub('scripts/04Gi-CountPerSample.R',job_name = 'CTPeakCount',wait_for ='CellTypePeak' )
 
 
+#check how many new peak and cell specificity
+peaks<-readRDS(fp(out,'brain_12best_samples_qc_celltype_peaks.rds'))
+mtd<-fread(fp(out,'metadata_all_nuclei_celltype_annotated.csv.gz'))
+
+peaks_dt<-data.table(as.data.frame(peaks))
+peaks_dt[,peak_id:=paste(seqnames,start,end,sep="-")]
+peaks_dt[,chr:=seqnames]
+peaks_dt<-Reduce(rbind,lapply(str_replace_all(unique(mtd$cell_type)," |/","_"), function(x){
+  ocrs<-peaks_dt[str_detect(peak_called_in,x)]
+  return(ocrs[,cell_type:=x][,-'peak_called_in'])
+}))
+peaks_dt[,n.ct:=.N,by="peak_id"]
+length(unique(peaks_dt$peak_id))#318278
+
+fwrite(peaks_dt,fp(out,"brain_12best_samples_qc_celltype_peaks.csv.gz"))
+
+peaks_samples<-fread('outputs/04-ROSMAP_MIT_ATAC/initial_peak_calling_by_indivs_tidy.csv.gz')
+length(unique(peaks_samples$peak_id))#401697
+#more peak in initial call, but more cell type specific peak?
+#=> %frag_in_peak before / after
+mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
+mtd$pct_frag_in_peaksCT<- mtd$nCount_peaksCT/mtd$n_tot_fragments
+mtd2<-rbind(mtd[,.(cell_id,cell_type,pct_reads_in_peaks)][,peak_calling:='per donor'],mtd[,.(cell_id,cell_type,pct_frag_in_peaksCT)][,pct_reads_in_peaks:=pct_frag_in_peaksCT][,peak_calling:='per cell type'],fill=T)
+ggplot(mtd2)+geom_boxplot(aes(x=cell_type,y=pct_reads_in_peaks,fill=peak_calling))+theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+
 #7) merge sample object per main cell type, ####
-#
 #for one
-mtd<-fread(fp(out,'all_final_ATACseq_nuclei_metadata.csv.gz'))
-unique(mtsc[,.(main_cell_type)])
+unique(mtd[,.(main_cell_type)])
 astro_list<-lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
                              full.names = T,recursive = F)[1:2], function(d){
                                s<-basename(d)
@@ -660,16 +669,252 @@ RunQsub('scripts/04H-MergeMainCellType.R',job_name = 'mergeMain')
 
 
 #8) cell type level QC : 
+#for 1
+#3* IQR? of nCount, nFeature, pct read, tss enrichment etc
+Exc<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Exc.rds')
+head(Exc[[]])
+VlnPlot(Exc,features =  c('pct_frag_in_peaksCT','nFeature_peaksCT','nCount_peaksCT'),pt.size = 0)
+VlnPlot(Exc,features =  c('pct_frag_in_peaksCT','nFeature_peaksCT','nCount_peaksCT'),pt.size = 0,split.by = 'disease')
+VlnPlot(Exc,features =  c('nFeature_peaksCT','nCount_peaksCT'),pt.size = 0,split.by = 'disease',log=T)
+
+VlnPlot(Exc,features =  c('TSS.enrichment','nucleosome_signal'),split.by = 'disease',pt.size = 0,log=T)
+#ggsave(fp(out1,ps(ct,'qc_cell_metrics.png')),width = 8,height = 6)
+
+boxres<-boxplot.stats(Exc$nCount_peaksCT,coef = 3)
+Exc$nCount_peaksCT.high<-colnames(Exc)%in%names(boxres$out)
+sum(Exc$nCount_peaksCT.high) #2908/168288 #2%
+table(Exc$nCount_peaksCT.outlier,Exc$libraryID)#but a removed from one donor
+VlnPlot(Exc,features =  'nCount_peaksCT',split.by = 'nCount_peaksCT.outlier',pt.size = 0,log=T)
+VlnPlot(subset(Exc,libraryID=='D19-12521'),features =  'nCount_peaksCT')
+
+#ggsave(fp(out2,ps(ct,'qc_nUMIs.png')),width = 4,height = 6)
+
+boxres<-boxplot.stats(Exc$nFeature_peaksCT,coef = 3)
+Exc$nFeature_peaksCT.high<-colnames(Exc)%in%names(boxres$out)
+sum(Exc$nFeature_peaksCT.high) #2133/168288 #1%
+table(Exc$nFeature_peaksCT.high,Exc$libraryID)
+VlnPlot(Exc,features =  'nFeature_peaksCT',split.by = 'nFeature_peaksCT.high',pt.size = 0,log=T)
+#can exclude based on that
+Exc$nFeature_peaksCT.outlier<-Exc$nFeature_peaksCT.high
+
+
+VlnPlot(Exc,features =  'pct_frag_in_peaksCT',pt.size = 0,log=T)
+boxres<-boxplot.stats(Exc$pct_frag_in_peaksCT,coef = 3)
+Exc$pct_frag_in_peaksCT.high<-colnames(Exc)%in%names(boxres$out)
+sum(Exc$pct_frag_in_peaksCT.high) #0
+table(Exc$pct_frag_in_peaksCT.high,Exc$libraryID)
+VlnPlot(Exc,features =  'pct_frag_in_peaksCT',split.by = 'nFeature_peaksCT.high',pt.size = 0,log=T)
+#can't exclude based on that
+#Exc$nFeature_peaksCT.outlier<-Exc$nFeature_peaksCT.high
+
+
+VlnPlot(Exc,features =  'TSS.enrichment',pt.size = 0,log=T)
+boxres<-boxplot.stats(Exc$TSS.enrichment,coef = 3)
+Exc$TSS.enrichment.high<-colnames(Exc)%in%names(boxres$out)
+sum(Exc$TSS.enrichment.high) #496
+table(Exc$TSS.enrichment.high,Exc$libraryID)
+VlnPlot(Exc,features =  'TSS.enrichment',split.by = 'TSS.enrichment.high',pt.size = 0,log=T)
+#can't exclude based on that because only loww tss enrichemnnt is bad
+#do normal outlier detection to detect low score outlier
+boxres<-boxplot.stats(Exc$TSS.enrichment)
+Exc$TSS.enrichment.low<-colnames(Exc)%in%names(boxres$out)&Exc$TSS.enrichment<boxres$stats[2]
+sum(Exc$TSS.enrichment.low) #29
+Exc$TSS.enrichment.outlier<-Exc$TSS.enrichment.low
+
+
+VlnPlot(Exc,features =  'nucleosome_signal',pt.size = 0,log=T)
+boxres<-boxplot.stats(Exc$nucleosome_signal,coef = 3)
+Exc$nucleosome_signal.high<-colnames(Exc)%in%names(boxres$out)
+sum(Exc$nucleosome_signal.high) #2876
+table(Exc$nucleosome_signal.high,Exc$libraryID) #outliers fairly distribute accross donors
+VlnPlot(Exc,features =  'nucleosome_signal',split.by = 'nucleosome_signal.high',pt.size = 0,log=T)
+#can exclude based on that
+Exc$nucleosome_signal.outlier<-Exc$nucleosome_signal.high
+
+#Final outlier is:
+Exc$cell.outlier<-Exc$nucleosome_signal.outlier|Exc$TSS.enrichment.outlier|Exc$TSS.enrichment.outlier|Exc$nFeature_peaksCT.outlier
+
+
+Exc$outlier<-Exc$donor.outlier|Exc$cell.outlier
+
+message(round(sum(Exc$donor.outlier)/nrow(Exc),digits = 2),'% nuclei flagged as donors outliers')
+message(round(sum(Exc$cell.outlier)/nrow(Exc),digits = 2),'% nuclei flagged as cells outliers' )
+
+message('In total ',round(sum(Exc$outlier)/nrow(Exc),digits = 2),'% nuclei flagged as outliers')
+
+#save the full object
+#saveRDS(exc,file)
+
+#for all
+#run 04I
+CreateJobForRfile('scripts/04I-cell_level_QC.R',nThreads = 28)
+RunQsub('scripts/04I-cell_level_QC.R',wait_for = 'mergeMain',job_name = 'CellQC')
 
 
 #9)DonorsGroups-cell type level peak calling####
 # to increase discovery of subpop specific peak, call per groups of donors (non outliers donors only).
 # for each celltype group donors according to KNN/SNN celltype spe PCA of celltype spe peak count matrix
 # (group can be different depending of cell type)
+#for 1 ct
+astro<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Astro.rds')
+
+#rm outlier
+astro<-astro[,!astro$outlier]
+table(astro$libraryID)
+
+#per cell type 
+#1) peak call per cluster
+
+#at least 20 cells per donor
+samples_to_keep<-names(which(table(astro$libraryID)>20))
+astro<-astro[,astro$libraryID%in%samples_to_keep]
+
+astro_pseudo<-AggregateExpression(astro,slot = 'data',
+                                  assays = 'peaksCT',return.seurat = T,group.by = 'libraryID')
+
+mtd<-data.table(astro@meta.data)
+mtd[,median_n_tot_fragment:=median(n_tot_fragments),by='libraryID']
+mts<-unique(mtd,by='libraryID')
+
+astro_pseudo<-AddMetaData(astro_pseudo,data.frame(mts,row.names = 'libraryID'))
+
+astro_pseudo <- FindTopFeatures(astro_pseudo, min.cutoff = 'q0',assays = 'peaksCT')
+astro_pseudo <- RunSVD(object = astro_pseudo)
+DepthCor(astro_pseudo)
+
+astro_pseudo <- RunUMAP(
+  object = astro_pseudo,
+  reduction = 'lsi',
+  dims = 1:6
+)
+
+astro_pseudo <- FindNeighbors(
+  object = astro_pseudo,
+  reduction = 'lsi',
+  dims = 1:6
+)
+astro_pseudo <- FindClusters(
+  object = astro_pseudo,
+  algorithm = 3,
+  resolution = 1.2,
+  verbose = FALSE
+)
+
+DimPlot(astro_pseudo)
+DimPlot(astro_pseudo,group.by = 'disease')
+DimPlot(astro_pseudo,group.by = 'apoe4')
+DimPlot(astro_pseudo,group.by = 'apoe2')
+DimPlot(astro_pseudo,group.by = 'avg.pct.read.in.peak.ct')
+DimPlot(astro_pseudo,group.by = c('msex'))
+
+
+FeaturePlot(astro_pseudo, c('n.ct','avg.pct.read.in.peak.ct'))
+FeaturePlot(astro_pseudo, c('braaksc','pmi'))
+
+#save donor cluster
+mtd[cell_type==ct,donor.ct.group:=astro_pseudo@meta.data[libraryID,'seurat_clusters']]
+astro<-AddMetaData(astro,data.frame(mtd[cell_type==ct][,.(cell_id_long,donor.ct.group)],
+                                            row.names = 'cell_id_long'))
+
+#peak call per cluster
+peaks<-CallPeaks(astro,group.by=c('donor.ct.group'),
+                 macs2.path = '/projectnb/tcwlab/LabMember/adpelle1/micromamba/envs/macs2/bin/macs2')
+peaks$peak_called_in<-paste0(ct,peaks$peak_called_in)
+
+
+#for all
+#run 04J
+
+CreateJobForRfile('scripts/04J-PeakCallDonorGroup.R',nThreads = 28,maxHours = 48)
+RunQsub('scripts/04J-PeakCallDonorGroup.R',job_name = 'PeakDonorGroup',wait_for = 'mergeMain')
+
+peaks<-readRDS(fp(out,'perDonorGroups_celltype_peaks.rds'))
+mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
+
+peaks_dt<-data.table(as.data.frame(peaks))
+peaks_dt[,peak_id:=paste(seqnames,start,end,sep="-")]
+peaks_dt[,chr:=seqnames]
+peaks_dt<-Reduce(rbind,lapply(unique(mtd$cell_type), function(x){
+  ocrs<-peaks_dt[str_detect(peak_called_in,x)]
+  return(ocrs[,cell_type:=x][,-'peak_called_in'])
+}))
+peaks_dt[,n.ct:=.N,by="peak_id"]
+length(unique(peaks_dt$peak_id))#491503 - 318278 = 173k new peak
+
+fwrite(peaks_dt,fp(out,"perDonorGroups_celltype_peaks.csv.gz"))
+peaks_dt<-fread(fp(out,"perDonorGroups_celltype_peaks.csv.gz"))
+
+#celltype spe peak
+peaksct_dt<-fread(fp(out,"brain_12best_samples_qc_celltype_peaks.csv.gz"))
+table(peaksct_dt$cell_type)
+peaks_dt<-rbind(peaks_dt[,call:='PerSampleGroups'],peaksct_dt[,call:='12BestSamples'])
+peaks_dt[,cell_type:=str_replace_all(cell_type,' ','_')]
+peaks_dt[,cell_type:=str_replace_all(cell_type,'/','_')]
+
+ggplot(peaks_dt)+geom_bar(aes(x=cell_type,fill=call),position = 'dodge')+
+  scale_x_discrete(guide = guide_axis(angle = 60))+theme_bw()
+peaks_dt[,celltype_spe:=.N==1,by=.(peak_id,call)]
+ggplot(peaks_dt[(celltype_spe)])+geom_bar(aes(x=cell_type,fill=call),position = 'dodge')+
+  scale_x_discrete(guide = guide_axis(angle = 60))+theme_bw()
+
+#in each celltype, n of sample group spe peaks
+peaks_dt<-data.table(as.data.frame(peaks))
+peaks_dt[,peak_id:=paste(seqnames,start,end,sep="-")]
+peaks_dt[,chr:=seqnames]
+peaks_l<-lapply(unique(mtd$cell_type), function(ct){
+  ocrs<-peaks_dt[str_detect(peak_called_in,ct)]
+  return(ocrs[,cell_type:=ct][,peak_called_in:=str_extract(peak_called_in,paste0(ct,'[0-9,]+'))])
+})
+
+peaks_l[[1]]
+unique(unlist(strsplit(str_remove(peaks_l[[1]]$peak_called_in,unique(peaks_l[[1]]$cell_type)),',')))
+peaks_dt<-rbindlist(lapply(peaks_l, function(x){
+  
+  groups<-unique(unlist(strsplit(str_remove(x$peak_called_in,unique(x$cell_type)),',')))
+  ocrs<-rbindlist(lapply(groups, function(g){
+    ocr<-x[str_detect(peak_called_in,g)]
+    return(ocr[,group:=g][,-'peak_called_in'])
+  }))
+  return(ocrs)
+}))
+peaks_dt
+ggplot(peaks_dt)+geom_bar(aes(x=cell_type,fill=group),position = 'dodge')+
+  scale_x_discrete(guide = guide_axis(angle = 60))+theme_bw()
+
+peaks_dt[,group_spe:=.N==1,by=.(peak_id,cell_type)]
+
+ggplot(peaks_dt[(group_spe)])+geom_bar(aes(x=cell_type,fill=group),position = 'dodge')+
+  scale_x_discrete(guide = guide_axis(angle = 60))+theme_bw()
+
+
+fwrite(peaks_dt,fp(out,"perDonorGroups_celltype_peaks_groupsinfos.csv.gz"))
+
+#create new feature matrix 
+CreateJobForRfile('scripts/04Ji-CountPerCelltype.R',nThreads = 36)
+RunQsub('scripts/04Ji-CountPerCelltype.R',
+        job_name = 'DonorGroupPeakCount',wait_for ='PeakDonorGroup' )
+
+#=> %frag_in_peak before / after
+mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
+#mtd$pct_frag_in_peaksCT<- mtd$nCount_peaksCT/mtd$n_tot_fragments
+mtd2<-rbind(mtd[,.(cell_id,cell_type,pct_frag_in_peaksCT)][,pct_frag_in_peaks:=pct_frag_in_peaksCT][,peak_calling:='12BestSamples'],mtd[,.(cell_id,cell_type,pct_frag_in_peaksDCT)][,pct_frag_in_peaks:=pct_frag_in_peaksDCT][,peak_calling:='PerSampleGroups'],fill=T)
+ggplot(mtd2)+geom_boxplot(aes(x=cell_type,y=pct_reads_in_peaks,fill=peak_calling))+theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+
+ggplot(mtd2)+geom_boxplot(aes(x=disease,y=pct_reads_in_peaks,fill=peak_calling))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
+
+ggplot(mtd2)+geom_boxplot(aes(x=apoe4,y=pct_reads_in_peaks,fill=peak_calling))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
+
+ggplot(mtd2)+geom_boxplot(aes(x=libraryID,y=pct_reads_in_peaks,fill=peak_calling))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
 
 
 #10) pseudobulk peak count creation
 
 
-#11) test a first experiment
+#11) test a first experiment:
+#APOE4vs3 per celltype chrine access
+#APOE4 effecton heterochrine disruption
+#or APOE TF footprint
 

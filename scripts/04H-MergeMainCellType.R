@@ -11,19 +11,47 @@ library(EnsDb.Hsapiens.v86)
 mtd<-fread(fp(out,'all_final_ATACseq_nuclei_metadata.csv.gz'))
 
 for(ct in unique(mtd$main_cell_type)){
-  meassage(ct)
-  brainct_list<-lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
-                                 full.names = T,recursive = F)[1:2], function(d){
-                                   s<-basename(d)
-                                   f<-fp(d,'signac_object.rds')
-                                   brain<-readRDS(f)
-                                   brain<-SplitObject(brain,split.by='main_cell_type')[[ct]]
-                                   return(brain)
-                                 })
-  
-  brainct<-merge(brainct_list[[1]],brainct_list[2:length(brainct_list)], merge.dr = c('ref.lsi','ref.umap'),merge.data=FALSE)
-  saveRDS(brainct,fp(out,ps(ct,'.rds')))
-  
-  
-  
+  message(ct)
+  file_out<-fp(out,ps(ct,'.rds'))
+  if(!file.exists(file_out)){
+    brainct_list<-lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
+                                   full.names = T,recursive = F), function(d){
+                                     f<-fp(d,'signac_object_annotated_celltype_peaks.rds')
+                                     brainct<-SplitObject(readRDS(f),split.by='main_cell_type')[[ct]]
+                                     return(brainct)
+                                   })
+    brainct_list<-brainct_list[!sapply(brainct_list,is.null)]
+    brainct<-merge(brainct_list[[1]],brainct_list[2:length(brainct_list)],
+                   merge.dr = c('ref.lsi','ref.umap'),merge.data=FALSE)
+    saveRDS(brainct,file_out)
+
+  }
+
+
 }
+
+
+# for(ct in unique(mtd$main_cell_type)){
+#   message(ct)
+#   file_out<-fp(out,ps(ct,'.rds'))
+#   brainct<-readRDS(file_out)
+#   
+# 
+#     brainct_list<-lapply(list.dirs('outputs/04-ROSMAP_MIT_ATAC/peak_count_matrices/',
+#                                    full.names = T,recursive = F), function(d){
+#                                      f<-fp(d,'signac_object_annotated_celltype_peaks.rds')
+#                                      brainct<-SplitObject(readRDS(f),split.by='main_cell_type')[[ct]]
+#                                      return(brainct)
+#                                    })
+#     
+#     brainct_list<-brainct_list[!sapply(brainct_list,is.null)]
+#     brainct.old<-merge(brainct_list[[1]],brainct_list[2:length(brainct_list)], 
+#                    merge.dr = c('ref.lsi','ref.umap'),merge.data=FALSE)
+#     brainct.old<-brainct.old[,colnames(brainct)]
+#     Fragments(brainct)<-Fragments(brainct.old)
+#     
+#     saveRDS(brainct,file_out)
+#     
+#   
+# }
+

@@ -553,7 +553,7 @@ library(flexmix)
 #for 1####
 
 library(Seurat)
-astro<-readRDS('outputs/01-')
+astro<-readRDS('outputs/01-SEAAD_data/DLPFC/Astrocyte.rds')
 VlnPlot(astro,features =  c('Fraction.mitochondrial.UMIs','Genes.detected','Number.of.UMIs'),combine = F)
 ggsave(fp(out2,ps(ct,'qc_cell_metrics.png')),width = 8,height = 6)
 
