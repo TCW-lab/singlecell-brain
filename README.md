@@ -1,5 +1,5 @@
 # Singlecell-brain analysis
-Pipeline to preprocess Human (postmortem) brain single cell genomics data
+Pipelines to preprocess Human (postmortem) brain single cell genomics data
 
 # Project Status (Feb 2024)
 - Generate ROSMAP snATAC matrix per cell type (annotated thanks to SEA-AD DLPFC scRNA)
