@@ -3,9 +3,9 @@
 
 #$-P  tcwlab
 #$-j y
-#$-l h_rt=24:00:00
+#$-l h_rt=48:00:00
 #$-o  ./logs/04Ji-CountPerCelltype.log
-#$-pe omp 36
+#$-pe omp 28
 
 
 #Modules to load:

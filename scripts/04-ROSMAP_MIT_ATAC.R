@@ -801,10 +801,10 @@ astro_pseudo <- FindClusters(
 )
 
 DimPlot(astro_pseudo)
-DimPlot(astro_pseudo,group.by = 'disease')
+DimPlot(astro_pseudo,group.by = 'cognitive_status')
 DimPlot(astro_pseudo,group.by = 'apoe4')
 DimPlot(astro_pseudo,group.by = 'apoe2')
-DimPlot(astro_pseudo,group.by = 'avg.pct.read.in.peak.ct')
+FeaturePlot(astro_pseudo, 'avg.pct.read.in.peak.ct')
 DimPlot(astro_pseudo,group.by = c('msex'))
 
 
@@ -890,7 +890,7 @@ ggplot(peaks_dt[(group_spe)])+geom_bar(aes(x=cell_type,fill=group),position = 'd
 fwrite(peaks_dt,fp(out,"perDonorGroups_celltype_peaks_groupsinfos.csv.gz"))
 
 #create new feature matrix 
-CreateJobForRfile('scripts/04Ji-CountPerCelltype.R',nThreads = 36)
+CreateJobForRfile('scripts/04Ji-CountPerCelltype.R',nThreads = 28,maxHours = 48)
 RunQsub('scripts/04Ji-CountPerCelltype.R',
         job_name = 'DonorGroupPeakCount',wait_for ='PeakDonorGroup' )
 
@@ -898,16 +898,112 @@ RunQsub('scripts/04Ji-CountPerCelltype.R',
 mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
 #mtd$pct_frag_in_peaksCT<- mtd$nCount_peaksCT/mtd$n_tot_fragments
 mtd2<-rbind(mtd[,.(cell_id,cell_type,pct_frag_in_peaksCT)][,pct_frag_in_peaks:=pct_frag_in_peaksCT][,peak_calling:='12BestSamples'],mtd[,.(cell_id,cell_type,pct_frag_in_peaksDCT)][,pct_frag_in_peaks:=pct_frag_in_peaksDCT][,peak_calling:='PerSampleGroups'],fill=T)
-ggplot(mtd2)+geom_boxplot(aes(x=cell_type,y=pct_reads_in_peaks,fill=peak_calling))+theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
 
-ggplot(mtd2)+geom_boxplot(aes(x=disease,y=pct_reads_in_peaks,fill=peak_calling))+
-  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
+mtd2<-rbind(mtd2,mtd[,.(cell_id,cell_type,pct_reads_in_peaks)][,pct_frag_in_peaks:=pct_reads_in_peaks][,peak_calling:='bulk_per_donor'],fill=T)
+mtd2[,peak_calling:=factor(peak_calling,levels = c('bulk_per_donor','12BestSamples','PerSampleGroups'))]
 
-ggplot(mtd2)+geom_boxplot(aes(x=apoe4,y=pct_reads_in_peaks,fill=peak_calling))+
-  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
+ggplot(mtd2)+geom_boxplot(aes(x=cell_type,y=pct_frag_in_peaks,fill=peak_calling))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
 
-ggplot(mtd2)+geom_boxplot(aes(x=libraryID,y=pct_reads_in_peaks,fill=peak_calling))+
-  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('cell_type')
+#still less AD/APOE4 in peak? 
+ggplot(mtd)+geom_boxplot(aes(x=cell_type,y=pct_frag_in_peaksDCT,fill=disease))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+
+ggplot(mtd)+geom_boxplot(aes(x=cell_type,y=pct_frag_in_peaksDCT,fill=apoe4))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+
+
+#sample lvel - main cell type
+mtd[,avg.pct.read.in.peak:=mean(pct_frag_in_peaksDCT),by=c('libraryID')]
+mtd[,avg.pct.read.in.peak.ct:=mean(pct_frag_in_peaksDCT),by=c('libraryID','main_cell_type')]
+
+mtsc<-unique(mtd[!(outlier)],by=c('libraryID','main_cell_type'))
+
+mtsc[,clinical_status:=ifelse(cognitive_status=='AD',"AD",'NL')]
+mtsc[,clinical_status:=factor(clinical_status,levels = c('NL','AD'))]
+mtsc[,APOE4_carrier:=ifelse(apoe4,"yes",'no')]
+
+mtsc[,transposition.event.outside.peak:=1-avg.pct.read.in.peak.ct]
+
+#AD vs not
+ggplot(mtsc)+geom_boxplot(aes(x=main_cell_type,y=transposition.event.outside.peak,fill=clinical_status))+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+
+
+
+mtsc[,wilcox.test(transposition.event.outside.peak[(disease)],
+                  transposition.event.outside.peak[!(disease)])$p.value,by=.(main_cell_type)]
+
+# main_cell_type         V1
+# 1:          Oligo 0.22989356
+# 2:            Exc 0.02724819
+# 3:            Inh 0.08010532
+# 4:          Astro 0.28079516
+# 5:            Mic 0.65746591
+# 6:            OPC 0.06260327
+# 7:           VLMC 0.84244971
+
+#APOE4 
+
+
+ggplot(mtsc,aes(x=APOE4_carrier,y=transposition.event.outside.peak,col=apoe4))+
+  geom_boxplot(outlier.shape = NA)+ 
+  geom_jitter(width=0.4,size=0.4)+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+
+  facet_grid(clinical_status~main_cell_type)
+
+mtsc[,wilcox.test(transposition.event.outside.peak[(apoe4)],
+                  transposition.event.outside.peak[!(apoe4)])$p.value,by=.(disease,main_cell_type)]
+# disease main_cell_type         V1
+# 1:    TRUE          Oligo 0.89662106
+# 2:    TRUE            Exc 0.48146031
+# 3:    TRUE            Inh 0.25960204
+# 4:    TRUE          Astro 0.89662106
+# 5:    TRUE            Mic 1.00000000
+# 6:    TRUE            OPC 0.69643413
+# 7:    TRUE           VLMC 0.74172333
+# 8:   FALSE            Inh 0.06502848
+# 9:   FALSE          Oligo 0.31399012
+# 10:   FALSE            Mic 0.17792188
+# 11:   FALSE            Exc 0.13587023
+# 12:   FALSE            OPC 0.10157674
+# 13:   FALSE          Astro 0.01479927 *
+# 14:   FALSE           VLMC 0.26782091
+
+
+
+#sample lvel - cell type
+# mtd[,avg.pct.read.in.peak:=mean(pct_frag_in_peaksDCT),by=c('libraryID')]
+# mtd[,avg.pct.read.in.peak.ct:=mean(pct_frag_in_peaksDCT),by=c('libraryID','cell_type')]
+# 
+# mtsc<-unique(mtd,by=c('libraryID','cell_type'))
+# 
+# ggplot(mtsc)+geom_boxplot(aes(x=cell_type,y=avg.pct.read.in.peak.ct,fill=disease))+
+#   theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+# 
+# ggplot(mtsc)+geom_boxplot(aes(x=cell_type,y=avg.pct.read.in.peak.ct,fill=apoe4))+
+#   theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))+facet_wrap('disease')
+# 
+# mtsc[,wilcox.test()]
+
+#stats 
+mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/all_final_ATACseq_nuclei_metadata.csv.gz')
+
+ggplot(mtd)+geom_bar(aes(x=libraryID))+facet_wrap('cognitive_status',scales = 'free_x')+theme_bw()
+?FeatureMatrix
+
+#BONUS)
+#can we recapitulate epigenetic erosion found in the cell paper??
+
+#QUESTIONS####
+#Astrocyte cluster analysis
+#we have found that Astroyte of APOE4 career have less transposition in peak (open chromatin) region 
+#meaning that DNA of APOE4 are more cut in 'heterochromatin' region compared to APOE33 carreer,
+#1) is there an APOE4 spe Astrocyte cluster with specific chromatin profile??
+#2) can we link them to Astrocyte RNA cluster??
+#3) retrotransposon region are more opened??
+
+
 
 
 #10) pseudobulk peak count creation
