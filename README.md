@@ -8,9 +8,9 @@ from SEA-AD , ROSMAP, and Gazestani et al cohort
 
 ## SEA-AD
 
-Data presentation : [SEAAD_QC.ipynb](notebooks/SEAAD_snRNA_data.ipynb)
-Data QC/Preprocessing : [SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)
-Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk.ipynb)
+Data presentation : [SEAAD_QC.ipynb](notebooks/SEAAD_snRNA_data.ipynb)  
+Data QC/Preprocessing : [SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)  
+Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk.ipynb)  
 
 
 Astrocyte Pseudobulk Differential Expression analysis : [pseudobulk_deseq2.ipynb](notebooks/pseudobulk_deseq2.ipynb)
