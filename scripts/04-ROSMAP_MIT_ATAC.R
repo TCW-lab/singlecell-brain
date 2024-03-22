@@ -896,6 +896,10 @@ RunQsub('scripts/04Ji-CountPerCelltype.R',
 
 #=> %frag_in_peak before / after
 mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
+mtd[,clinical_status:=ifelse(cognitive_status=='AD',"AD",'NL')]
+mtd[,clinical_status:=factor(clinical_status,levels = c('NL','AD'))]
+mtd[,APOE4_carrier:=ifelse(apoe4,"yes",'no')]
+
 #mtd$pct_frag_in_peaksCT<- mtd$nCount_peaksCT/mtd$n_tot_fragments
 mtd2<-rbind(mtd[,.(cell_id,cell_type,pct_frag_in_peaksCT)][,pct_frag_in_peaks:=pct_frag_in_peaksCT][,peak_calling:='12BestSamples'],mtd[,.(cell_id,cell_type,pct_frag_in_peaksDCT)][,pct_frag_in_peaks:=pct_frag_in_peaksDCT][,peak_calling:='PerSampleGroups'],fill=T)
 
@@ -912,16 +916,24 @@ ggplot(mtd)+geom_boxplot(aes(x=cell_type,y=pct_frag_in_peaksDCT,fill=disease))+
 ggplot(mtd)+geom_boxplot(aes(x=cell_type,y=pct_frag_in_peaksDCT,fill=apoe4))+
   theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
 
+#APOE4 Astrocyte in NL for grant
+mtdf<-mtd[clinical_status=='NL'&cell_type=='Astrocyte']
+
+
+#APOE carrier yes no
+ggplot(mtdf)+
+  geom_violin(aes(x=individualID,
+                  fill=APOE4_carrier,y=pct_frag_in_peaksDCT))+
+  scale_y_log10()+scale_x_discrete(limits=unique(mtdf[order(APOE4_carrier)]$individualID))
+
+ggplot(mtdf)+geom_boxplot(aes(x=individualID,fill=APOE4_carrier,y=pct_frag_in_peaksDCT))
+
 
 #sample lvel - main cell type
 mtd[,avg.pct.read.in.peak:=mean(pct_frag_in_peaksDCT),by=c('libraryID')]
 mtd[,avg.pct.read.in.peak.ct:=mean(pct_frag_in_peaksDCT),by=c('libraryID','main_cell_type')]
 
 mtsc<-unique(mtd[!(outlier)],by=c('libraryID','main_cell_type'))
-
-mtsc[,clinical_status:=ifelse(cognitive_status=='AD',"AD",'NL')]
-mtsc[,clinical_status:=factor(clinical_status,levels = c('NL','AD'))]
-mtsc[,APOE4_carrier:=ifelse(apoe4,"yes",'no')]
 
 mtsc[,transposition.event.outside.peak:=1-avg.pct.read.in.peak.ct]
 
@@ -970,7 +982,40 @@ mtsc[,wilcox.test(transposition.event.outside.peak[(apoe4)],
 # 13:   FALSE          Astro 0.01479927 *
 # 14:   FALSE           VLMC 0.26782091
 
+#APOE4 Astrocyte in NL for grant
+mtscf<-mtsc[clinical_status=='NL'&cell_type=='Astrocyte']
 
+mtscf[,apoe4:=factor(apoe4,levels = c(TRUE,FALSE))]
+
+#n apoe4 
+table(mtscf$apoe4)
+ # TRUE FALSE 
+ #    6    47 
+table(mtscf$apoe_genotype)
+
+
+ggplot(mtscf,aes(x=APOE4_carrier,y=transposition.event.outside.peak,col=apoe4))+
+  geom_boxplot(outlier.shape = NA)+ 
+  geom_jitter(width=0.4,size=1)+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
+ggsave('outputs/04-ROSMAP_MIT_ATAC/astrocyte_NL_heterochromatin_figure_for_aging_grant.pdf',width = 5,height = 5)
+
+#barplot +/- std error
+# Calculate mean and standard error for each group
+mtscf[,mean:=mean(transposition.event.outside.peak),'APOE4_carrier']
+mtscf[,se:=sd(transposition.event.outside.peak)/.N,'APOE4_carrier']
+
+# Create the barplot with error bars
+ggplot(mtscf, aes(x = APOE4_carrier, y = mean, fill = APOE4_carrier)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2, position = position_dodge(0.9)) +
+  labs(title = "Barplot with Standard Error", x = "Group", y = "Mean Value") +
+  theme_minimal()
+
+ggplot(mtscf,aes(x=APOE4_carrier,y=transposition.event.outside.peak,col=apoe4))+
+  geom_bar(outlier.shape = NA)+ 
+  geom_jitter(width=0.4,size=1)+
+  theme_bw()+scale_x_discrete(guide = guide_axis(angle = 60))
 
 #sample lvel - cell type
 # mtd[,avg.pct.read.in.peak:=mean(pct_frag_in_peaksDCT),by=c('libraryID')]
@@ -991,6 +1036,8 @@ mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/all_final_ATACseq_nuclei_metadata.csv.gz'
 
 ggplot(mtd)+geom_bar(aes(x=libraryID))+facet_wrap('cognitive_status',scales = 'free_x')+theme_bw()
 ?FeatureMatrix
+
+
 
 #BONUS)
 #can we recapitulate epigenetic erosion found in the cell paper??

@@ -14,8 +14,7 @@ pseudo_count<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro
 
 mat<-as.matrix(data.frame(pseudo_count,row.names = 'gene_id'))
 
-mtd<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/all_final_RNAseq_nuclei_main_cell_type_level_metadata.csv.gz')[main_cell_type=='Astro']
-fwrite(mtd,'outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro_metadata.csv.gz')
+mtd<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro_metadata.csv.gz')
 
 #QC
 #remove samples if flagged as outliers (See QC script) 
@@ -414,4 +413,206 @@ res_merge<-merge(fread(fp(out,"res_pseudobulkDESeq2_APOE4_vs_3_astro_MTG_Cov_sex
                  by=c('gene'),suffixes = c(".new", ".old"))
 
 ggplot(res_merge)+geom_point(aes(x=stat.new,y=stat.old),size=0.2) +theme_bw() #quite different, better new
+
+
+
+#AD vs CTRL ####
+#DLPFC
+pseudo_count<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro.csv.gz')
+
+mat<-as.matrix(data.frame(pseudo_count,row.names = 'gene_id'))
+
+mtd<-fread('outputs/01-SEAAD_data/DLPFC/pseudobulk_main_cell_type/Astro_metadata.csv.gz')
+
+#QC
+#remove samples if flagged as outliers (See QC script) 
+#here, all donors with clinical or cellular abnormalities are exclude, and if the pseudobulk come from n.cell<50
+mtd[(outlier)][,.(Donor.ID,Cognitive.Status,outlier.clinical.status,ethnicity,outlier.ethnicity,cell_prop_dev_pc1,outlier.cellprop,n.cells,outlier.n.cells)]
+mtdf<-mtd[!(outlier|outlier.n.cells)]
+nrow(mtdf)#71
+
+to_keep<-mtdf$Donor.ID 
+mat<-mat[,to_keep]
+
+#genes signicantly express (thr= 1CPM) in less than 10% of sample are removed
+isexpr <- rowSums(cpm(mat)>1) >= 0.1 * ncol(mat)
+sum(isexpr)#21k
+matf <- mat[isexpr,]
+
+
+#influence of covariates
+##first have a look on corelation between our factor of interest (here apoe4) and other covariates
+#let's first transform as numerical all covariates which can be
+mtdf[,braak.num:=as.numeric(as.factor(Braak))]
+mtdf[,.(braak.num,Braak)]
+mtdf[,thal_score:=as.numeric(factor(Thal))]
+mtdf[,.(Thal,thal_score)]
+mtdf[,atherosclerosis:=as.numeric(factor(Atherosclerosis,levels = c('None','Mild','Moderate','Severe')))]
+
+#also levels correctly categorical factor with the good reference
+mtdf[,Cognitive.Status:=factor(Cognitive.Status,levels = c('No dementia','Dementia'))] #reference is 'No dementia', so put in first positon,
+mtdf[,APOE4.Status:=factor(APOE4.Status,levels = c('N','Y'))]
+mtdf[,Sex:=factor(Sex,levels = c('Female','Male'))]
+
+
+covs_to_check<-list(categorical=c('batch_vendor_name','method',
+                                  'Cognitive.Status','Sex','APOE4.Status'),
+                    nums=c('avg.pct.mt.ct','n.cells','med.umis.per.cell',
+                           'med.genes.per.cell','library_input_ng','pcr_cycles',
+                           'PMI','age_at_death_num','Brain.pH','braak.num',
+                           'Fresh.Brain.Weight','thal_score','atherosclerosis'))
+
+factor_of_int<-'Cognitive.Status'
+
+res_cor_fctr_num<-rbindlist(lapply(setdiff(covs_to_check$nums,factor_of_int), function(f){
+  mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
+  summstats<-summary(mod)
+  data.table(factor=f,
+             p=summstats$coefficients[2,4],
+             beta=summstats$coefficients[2,1],
+             R2=summstats$adj.r.squared)
+}))
+res_cor_fctr_cat<-rbindlist(lapply(setdiff(covs_to_check$categorical,factor_of_int), function(f){
+  mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
+  summstats<-summary(mod)
+  data.table(factor=f,
+             p=anova(mod)$Pr[1],
+             R2=summstats$adj.r.squared)
+}))
+
+res_cor_fctr<-rbind(res_cor_fctr_num,res_cor_fctr_cat,fill=TRUE)
+
+res_cor_fctr[,p_sig:=ifelse(p<0.001,'***',ifelse(p<0.01,'**',ifelse(p<0.05,'*','')))] 
+res_cor_fctr
+
+design= ~avg.pct.mt.ct+PMI+library_input_ng+pcr_cycles+n.cells+med.umis.per.cell+atherosclerosis+Sex
+
+covs_to_scale<-c('PMI','avg.pct.mt.ct','library_input_ng',
+                 'pcr_cycles','n.cells','med.umis.per.cell')
+mtdf_scaled<-copy(mtdf)
+mtdf_scaled[,(covs_to_scale):=lapply(.SD,scale),.SDcols=covs_to_scale]
+
+#run DESEQ2
+dds <- DESeqDataSetFromMatrix(matf, 
+                              colData = data.frame(mtdf_scaled,row.names="Donor.ID")[colnames(matf),], 
+                              design = design)
+dds <- DESeq(dds)
+
+#extract contrast of interest
+mod_mat <- model.matrix(design(dds), colData(dds))
+
+ad <- colMeans(mod_mat[dds$Cognitive.Status== "Dementia", ])
+control <- colMeans(mod_mat[dds$Cognitive.Status == "No dementia", ])
+
+res <- results(dds,contrast = ad-control,alpha = 0.05)
+
+res<-data.table(as.data.frame(res),keep.rownames="gene")
+
+#add some annotation to the results
+res[,cell_type:="Astro"][,brain_region:='DLPFC']
+res[padj<0.25][order(padj)]
+
+res[,design:=paste0('~',as.character(design)[2])]
+
+fwrite(res,fp(out,"res_pseudobulkDESeq2_AD_vs_Control_astro_DLPFC_Cov_sex_atherosclerosis_PMI_ncells_nUmis_LibInput_PCRcycles_avg.mt.csv.gz"))
+
+
+#MTG
+pseudo_count<-fread('outputs/01-SEAAD_data/MTG/pseudobulk_main_cell_type/Astro.csv.gz')
+
+mat<-as.matrix(data.frame(pseudo_count,row.names = 'gene_id'))
+
+mtd<-fread('outputs/01-SEAAD_data/MTG/pseudobulk_main_cell_type/Astro_metadata.csv.gz')
+
+#QC
+#remove samples if flagged as outliers (See QC script) 
+#here, all donors with clinical or cellular abnormalities are exclude, and if the pseudobulk come from n.cell<50
+mtd[(outlier)][,.(Donor.ID,Cognitive.Status,outlier.clinical.status,ethnicity,outlier.ethnicity,cell_prop_dev_pc1,outlier.cellprop,n.cells,outlier.n.cells)]
+mtdf<-mtd[!(outlier|outlier.n.cells)]
+nrow(mtdf)#71
+
+to_keep<-mtdf$Donor.ID 
+mat<-mat[,to_keep]
+
+#genes signicantly express (thr= 1CPM) in less than 10% of sample are removed
+isexpr <- rowSums(cpm(mat)>1) >= 0.1 * ncol(mat)
+sum(isexpr)#21k
+matf <- mat[isexpr,]
+
+
+#influence of covariates
+##first have a look on corelation between our factor of interest (here apoe4) and other covariates
+#let's first transform as numerical all covariates which can be
+mtdf[,braak.num:=as.numeric(as.factor(Braak))]
+mtdf[,.(braak.num,Braak)]
+mtdf[,thal_score:=as.numeric(factor(Thal))]
+mtdf[,.(Thal,thal_score)]
+mtdf[,atherosclerosis:=as.numeric(factor(Atherosclerosis,levels = c('None','Mild','Moderate','Severe')))]
+
+#also levels correctly categorical factor with the good reference
+mtdf[,Cognitive.Status:=factor(Cognitive.Status,levels = c('No dementia','Dementia'))] #reference is 'No dementia', so put in first positon,
+mtdf[,APOE4.Status:=factor(APOE4.Status,levels = c('N','Y'))]
+mtdf[,Sex:=factor(Sex,levels = c('Female','Male'))]
+
+
+covs_to_check<-list(categorical=c('batch_vendor_name','method',
+                                  'Cognitive.Status','Sex','APOE4.Status'),
+                    nums=c('avg.pct.mt.ct','n.cells','med.umis.per.cell',
+                           'med.genes.per.cell','library_input_ng','pcr_cycles',
+                           'PMI','age_at_death_num','Brain.pH','braak.num',
+                           'Fresh.Brain.Weight','thal_score','atherosclerosis'))
+
+factor_of_int<-'Cognitive.Status'
+
+res_cor_fctr_num<-rbindlist(lapply(setdiff(covs_to_check$nums,factor_of_int), function(f){
+  mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
+  summstats<-summary(mod)
+  data.table(factor=f,
+             p=summstats$coefficients[2,4],
+             beta=summstats$coefficients[2,1],
+             R2=summstats$adj.r.squared)
+}))
+res_cor_fctr_cat<-rbindlist(lapply(setdiff(covs_to_check$categorical,factor_of_int), function(f){
+  mod<-lm(unlist(mtdf[,lapply(.SD, as.numeric),.SDcols=factor_of_int])~unlist(mtdf[,..f]))
+  summstats<-summary(mod)
+  data.table(factor=f,
+             p=anova(mod)$Pr[1],
+             R2=summstats$adj.r.squared)
+}))
+
+res_cor_fctr<-rbind(res_cor_fctr_num,res_cor_fctr_cat,fill=TRUE)
+
+res_cor_fctr[,p_sig:=ifelse(p<0.001,'***',ifelse(p<0.01,'**',ifelse(p<0.05,'*','')))] 
+res_cor_fctr
+
+design= ~avg.pct.mt.ct+PMI+library_input_ng+pcr_cycles+n.cells+med.umis.per.cell+atherosclerosis+Sex
+
+covs_to_scale<-c('PMI','avg.pct.mt.ct','library_input_ng',
+                 'pcr_cycles','n.cells','med.umis.per.cell')
+mtdf_scaled<-copy(mtdf)
+mtdf_scaled[,(covs_to_scale):=lapply(.SD,scale),.SDcols=covs_to_scale]
+
+#run DESEQ2
+dds <- DESeqDataSetFromMatrix(matf, 
+                              colData = data.frame(mtdf_scaled,row.names="Donor.ID")[colnames(matf),], 
+                              design = design)
+dds <- DESeq(dds)
+
+#extract contrast of interest
+mod_mat <- model.matrix(design(dds), colData(dds))
+
+ad <- colMeans(mod_mat[dds$Cognitive.Status== "Dementia", ])
+control <- colMeans(mod_mat[dds$Cognitive.Status == "No dementia", ])
+
+res <- results(dds,contrast = ad-control,alpha = 0.05)
+
+res<-data.table(as.data.frame(res),keep.rownames="gene")
+
+#add some annotation to the results
+res[,cell_type:="Astro"][,brain_region:='MTG']
+res[padj<0.25][order(padj)]
+
+res[,design:=paste0('~',as.character(design)[2])]
+
+fwrite(res,fp(out,"res_pseudobulkDESeq2_AD_vs_Control_astro_MTG_Cov_sex_atherosclerosis_PMI_ncells_nUmis_LibInput_PCRcycles_avg.mt.csv.gz"))
 
