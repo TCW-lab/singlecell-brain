@@ -8,7 +8,7 @@ from SEA-AD , ROSMAP, and Gazestani et al cohort
 
 ## SEA-AD
 
-Data presentation : [SEAAD_QC.ipynb](notebooks/SEAAD_snRNA_data.ipynb)  
+Data presentation : [SEAAD_snRNA_data.ipynb](notebooks/SEAAD_snRNA_data.ipynb)  
 Data QC/Preprocessing : [SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)  
 Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk.ipynb)  
 
