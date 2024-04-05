@@ -1039,6 +1039,40 @@ ggplot(mtd)+geom_bar(aes(x=libraryID))+facet_wrap('cognitive_status',scales = 'f
 
 
 
+#10) pseudobulk peak count creation
+#for 1
+source('../../utils/r_utils.R')
+library(Signac)
+library(Seurat)
+out1<-fp(out,'pseudobulk_data')
+dir.create(out1)
+astro<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Astro.rds')
+head(astro[[]])
+bulk=AggregateExpression(astro,
+                         return.seurat = TRUE, 
+                         slot = "counts", assays = "peaksDCT", group.by = c("individualID"))
+bulk
+saveRDS(bulk,fp(out1,'astro.rds'))
+
+#for all
+seurat_files<-list.files(out,'Ast|Exc|Inh|Mic|Oligo|OPC|VLMC',full.names = T)
+seurat_files
+for(f in seurat_files){
+  ct=tools::file_path_sans_ext(basename(f))
+  message(ct)
+  sc<-readRDS(f)
+  message(ncol(sc),' nuclei')
+  bulk=AggregateExpression(sc,
+                           return.seurat = TRUE, 
+                           slot = "counts", assays = "peaksDCT", group.by = c("individualID"))
+  bulk
+  saveRDS(bulk,fp(out1,ps(ct,'.rds')))
+}
+
+#repressive element accessibility analysis for ROSMAP and hiPSC Astro
+
+
+
 #BONUS)
 #can we recapitulate epigenetic erosion found in the cell paper??
 
@@ -1051,9 +1085,6 @@ ggplot(mtd)+geom_bar(aes(x=libraryID))+facet_wrap('cognitive_status',scales = 'f
 #3) retrotransposon region are more opened??
 
 
-
-
-#10) pseudobulk peak count creation
 
 
 #11) test a first experiment:
