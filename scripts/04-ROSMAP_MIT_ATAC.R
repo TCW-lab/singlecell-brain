@@ -1069,8 +1069,8 @@ for(f in seurat_files){
   saveRDS(bulk,fp(out1,ps(ct,'.rds')))
 }
 
-#repressive element accessibility analysis for ROSMAP and hiPSC Astro
-
+#repressive element accessibility analysis
+#see 04K
 
 
 #BONUS)
