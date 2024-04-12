@@ -14,7 +14,7 @@ Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk
 
 
 Astrocyte Pseudobulk Differential Expression analysis : [pseudobulk_deseq2.ipynb](notebooks/pseudobulk_deseq2.ipynb)
-
+Astrocyte fgsea analysis : [fgsea_analysis.ipynb)](https://github.com/TCW-lab/singlecell-brain/blob/main/notebooks/fgsea_analysis.ipynb)
 ## Gazestani et al
 Some checks in the dataset: [02-Gazestani_EarlyAD.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/02-Gazestani_EarlyAD.R)
 
