@@ -4,7 +4,7 @@
 #$-P  tcwlab
 #$-j y
 #$-l h_rt=24:00:00
-#$-o  ./logs/04Ki-CountChromHMM.log
+#$-o  ../singlecell-brain/logs/04Ki-CountChromHMM.log
 #$-pe omp 16
 
 
@@ -28,7 +28,7 @@ if [[ -n "${SGE_TASK_LAST}" && $SGE_TASK_LAST != "undefined" ]]; then
 fi
 echo "=========================================================="
 
-Rscript scripts/04Ki-CountChromHMM.R >> ./logs/04Ki-CountChromHMM.log
+Rscript ../singlecell-brain/scripts/04Ki-CountChromHMM.R >> ../singlecell-brain/logs/04Ki-CountChromHMM.log
 
 
 
