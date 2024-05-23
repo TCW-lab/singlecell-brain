@@ -39,7 +39,8 @@ mods_dtf<-mods_dt[!(is.na(gname)|gname=='')&module!='grey'] #grey is for unassig
 ```
 
 ## define the gene background
-One important consideration when performing ORA is to know in which 'background' the test is made. Indeed, we need to know what are the genes that have been considered in our study/experiment. For RNA-seq analysis, this is often all the genes that have been tested in your differential expression analysis. Here because we are performing function enrichment in WGCNA modules, we will used as background all genes that have been considered in the WGCNA analysis, ie. all the genes that pass the QC step. Here this correspond to all genes assigned to a module plus those unassigned which are therefore located in the 'grey' module
+One important consideration when performing ORA is to know in which 'background' the test are made. 
+The background are the genes that have been considered in our study/experiment. For RNA-seq analysis, this is often all the genes that have been tested in your differential expression analysis. Here because we are performing functional enrichment in WGCNA modules, we will used as background all genes that have been used in the WGCNA analysis, ie. all the genes that pass the QC step. This correspond to all genes assigned to a module plus those unassigned which are therefore located in the 'grey' module
 
 
 ```R
@@ -71,7 +72,7 @@ res_red_enr[padj<0.05]
 ```
 
 ## perform the over-representation test for all modules
-Here we will perform perform the test for each modules
+Here we will perform the test for each module
 
 
 ```R
