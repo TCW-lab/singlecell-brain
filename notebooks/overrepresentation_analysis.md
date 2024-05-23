@@ -26,7 +26,7 @@ length(unique(pathwaysf$pathway))#12k
 
 ```
 
-## Load or query gene list of interest
+## Load the genes lists of interest (the query)
 
 
 ```R
@@ -38,7 +38,7 @@ mods_dtf<-mods_dt[!(is.na(gname)|gname=='')&module!='grey'] #grey is for unassig
 
 ```
 
-## define the gene background
+## Define the gene background
 One important consideration when performing ORA is to know in which 'background' the test are made. 
 The background are the genes that have been considered in our study/experiment. For RNA-seq analysis, this is often all the genes that have been tested in your differential expression analysis. Here because we are performing functional enrichment in WGCNA modules, we will used as background all genes that have been used in the WGCNA analysis, ie. all the genes that pass the QC step. This correspond to all genes assigned to a module plus those unassigned which are therefore located in the 'grey' module
 
@@ -47,7 +47,7 @@ The background are the genes that have been considered in our study/experiment. 
 gene_background=mods_dt$gname
 ```
 
-## perform the over-representation test for module Red genes
+## Perform the over-representation test for module Red genes
 Let's do it for one module, e.gg the module 'red'
 The function have 3 required parameter :
 - `querys` : vector of your genes of interest. if is a list of several genes list (of several vector in R language), will perform the test for every vector.
@@ -71,7 +71,7 @@ we can assess pathways enriched in this module
 res_red_enr[padj<0.05]
 ```
 
-## perform the over-representation test for all modules
+## Perform the over-representation test for all modules
 Here we will perform the test for each module
 
 
@@ -87,35 +87,32 @@ table(res_modules_enr[padj<0.05]$query)
 
 ```
 
-## perform the over-representation test separating each category of gene sets
-12000 gene set are tested together but are coming from different source (e.g. GO Biological process, KEGG..).  
+## Perform the over-representation test separating each category of gene sets
+12000 gene sets are tested together but are coming from different source (e.g. GO Biological process, KEGG..).  
 
-Just for multiple correction test purpose (i.e `padj`calculation)This is better to perform the OR3 test independantly for each of these sources. To do that we can split first the pathways data.frame per source (`subcat`) and then perform OR3
+For multiple correction test purpose (i.e `padj`calculation)This is better to perform the OR3 test independantly for each of these sources. To do that we can split first the pathways data.frame per source (`subcat`) and then perform OR3
 
 
 ```R
 splitted_pathways<-split(pathwaysf,by='subcat')
-res_modules_enr<-rbindlist(lapply(splitted_pathways,function(pathwf)OR3(modules_list,
-                                                                        terms_list = split(pathwf$gene,pathwf$pathway),
+res_modules_enr<-rbindlist(lapply(splitted_pathways,function(pathw_sub)OR3(modules_list,
+                                                                        terms_list = split(pathw_sub$gene,pathw_sub$pathway),
                                                                         background =gene_background)))
 
 #number of pathways enriched per module
 table(res_modules_enr[padj<0.05]$query)
                                   
 ```
-
+We can add some pathways annotation to the results
 
 ```R
 #add subcategory and pathway size info
 setnames(pathways_infos,old = 'pathway','term') #for column name compatibility allowing merging the data.frames
 
 res_modules_enr<-merge(res_modules_enr,unique(pathways_infos,by='term'),by='term')[order(query,term,pval)]
-
+head(res_modules_enr)
 ```
 
-We can then save these results using e.g. `fwrite` and vizualize it using e.g. `ggplot2` 
+That's all ! We can then save these results using e.g. `fwrite` and vizualize it using e.g. `ggplot2` 
 
 
-```R
-
-```
