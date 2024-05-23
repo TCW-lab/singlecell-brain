@@ -1,7 +1,7 @@
 # Over representation test
 
-Here we will describe how to perform over-representation analysis (ORA). ORA test the stastical significance of an overlap between a list of genes (your gene list of interest, eg the DEGs) and reference gene-sets (e.g. of known biological pathways) using fisher's exact test/ hypergeometric test. With GSEA used by fgsea, ORA is the most common to test use when performing pathway/functional enrichment analysis. The difference with GSEA is are mainly your input data :  ORA use a list of genes of interest (e.g DEGs at certain threshold, genes of a certain module) while GSEA used a ranked list of all your genes tested in an experiment.
-Depending of your biological question, one of the others can be more relevant to use, or both can be used also as a validation.
+Here we will describe how to perform over-representation analysis (ORA). ORA test the stastical significance of an overlap between a list of genes (your gene list of interest, eg the DEGs) and reference gene-sets (e.g. of known biological pathways) using fisher's exact test/ hypergeometric test. In addition to GSEA/fgsea, ORA is the most common test use when performing pathway/functional enrichment analysis. The difference with GSEA are mainly the input data :  ORA use a list of genes of interest (e.g DEGs at certain threshold, genes of a certain module) while GSEA used a ranked list of all the genes tested in an experiment.
+Depending of your biological question and data to analyze, one of the others can be more relevant to use, or both can be used also as a validation.
 
 For this example we will used our downladed [MSIGDB pathways/ontologies](https://www.gsea-msigdb.org/gsea/msigdb/human/collections.jsp) as reference gene-sets to test functional enrichment in a module of co-expressed genes identified through WGCNA analysis.
 
