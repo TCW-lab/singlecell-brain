@@ -1,6 +1,6 @@
 
 #Get downsampled seurat obejct of SEAAD h5ad files 
-out<-'outputs/01-SEAAD_data/'
+out<-'~/projects-tcwlab/singlecell-brain/outputs/01-SEAAD_data/'
 library(data.table)
 setDTthreads(0)
 library(Seurat) #seurat V4, not V5
@@ -46,9 +46,11 @@ brain_downsampled<-Reduce(function(x,y)merge(x,y),lapply(files_paths,function(fi
 }))
 brain_downsampled
 
+brain_downsampled[['RNA']]<-as(brain_downsampled[['RNA']],Class = 'Assay')
 saveRDS(brain_downsampled,file = file.path(out,'SEAAD_DLPFC_43k.rds'))
 
 table(brain_downsampled$Subclass)
+
 
 
 
@@ -81,11 +83,8 @@ brain_downsampled<-Reduce(function(x,y)merge(x,y),lapply(files_paths,function(fi
   
 }))
 brain_downsampled
-
+brain_downsampled[['RNA']]<-as(brain_downsampled[['RNA']],Class = 'Assay')
 saveRDS(brain_downsampled,file = file.path(out,'SEAAD_MTG_43k.rds'))
-
-table(brain_downsampled$Subclass)
-
 
 # brain_mtg<-readRDS(file = file.path(out,'SEAAD_MTG_43k.rds'))
 # brain_mtg

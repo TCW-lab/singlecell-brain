@@ -644,11 +644,38 @@ saveRDS(celltype_qc_small,fp(out2,ps(ct,'_qc_small.rds')))
 CreateJobForRfile('scripts/01Diii-cell_level_QC.R',nThreads = 28)
 RunQsub('scripts/01Diii-cell_level_QC.R',job_name ='SEACellQC' )
 
+#get true proportions celltype
+
+
+
 
 #+ Create HighQual small rds object by cell type
 #run 01Div
 CreateJobForRfile('scripts/01Div-create_small_QCed_object.R',nThreads = 28)
 RunQsub('scripts/01Div-create_small_QCed_object.R',job_name ='SEACellSmall' )
+
+#merge all 
+library(Seurat)
+celltype_files<-list.files('outputs/01-SEAAD_data/MTG/QC_small/',pattern = '.rds',full.names = T)
+
+celltype_list<-lapply(celltype_files, function(f)readRDS(f))
+brain=merge(celltype_list[[1]],celltype_list[2:length(celltype_list)])
+brain
+saveRDS(brain,fp(out,'MTG','all_celltype_qc_small.rds'))
+brainf=brain[,sample(colnames(brain),50000)]
+saveRDS(brainf,fp(out,'MTG','all_celltype_qc_small_50k.rds'))
+table(brainf$main_cell_type)
+
+celltype_files<-list.files('outputs/01-SEAAD_data/DLPFC/QC_small/',pattern = '.rds',full.names = T)
+
+celltype_list<-lapply(celltype_files, function(f)readRDS(f))
+brain=merge(celltype_list[[1]],celltype_list[2:length(celltype_list)])
+brain
+saveRDS(brain,fp(out,'DLPFC','all_celltype_qc_small.rds'))
+brainf=brain[,sample(colnames(brain),50000)]
+saveRDS(brainf,fp(out,'DLPFC','all_celltype_qc_small_50k.rds'))
+table(brainf$main_cell_type)
+
 
 #Next TODO: how to use/presentation of this dataset
 #+ how to perform pseudobulk Analysis

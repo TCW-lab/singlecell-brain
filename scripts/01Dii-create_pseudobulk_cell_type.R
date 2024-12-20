@@ -43,7 +43,8 @@ for(file in files_paths){
   pseudo_mat<-AggregateExpression(celltype,assays = 'RNA',slot = 'count',group.by = sample_column,
                                   return.seurat = FALSE)
   
-  fwrite(data.table(pseudo_mat$RNA,keep.rownames = 'gene_id'),file.path(out1,paste0(ct,'_pseudobulk.csv.gz')))
+  fwrite(data.table(pseudo_mat$RNA,keep.rownames = 'gene_id'),
+         file.path(out1,paste0(ct,'_pseudobulk.csv.gz')))
   
   
 }
