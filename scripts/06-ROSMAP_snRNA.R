@@ -3,7 +3,7 @@ out<-'outputs/06-ROSMAP_MIT_snRNA/'
 dir.create(out)
 library(Seurat)
 
-#ROSMAT_MITout#ROSMAT_MIT preprocessing
+#ROSMAT_MITout#ROSMAT_MIT preprocessing####
 obj<-readRDS('~/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/Astrocytes.rds')
 head(obj[[]])
 table(obj$projid)
@@ -309,6 +309,124 @@ props[,pct.cells:=n.cells/n.cells.sample]
 ggplot(props)+geom_boxplot(aes(y=cell_type,x=pct.cells))+theme_bw()
 
 fwrite(props,'outputs/06-ROSMAP_MIT_snRNA/Pseudobulk_celltype/true_proportions.csv.gz')
+
+#downsampling based on Seaad celltypes####
+pct_keep=0.2
+cell_group='predicted.id'
+cell_id='cellID'
+
+min_by_group=200
+max_by_group=2000
+
+
+mtd<-fread('../../../acandib/APOE_Ab/Pseudobulk_QC/Cell_Metadata_ByCell.csv')
+#add pred id in the metadata
+files_paths=list.files('~/tcwlab/ShareSpace/MIT_ROSMAP_Multiomics/',pattern = '.rds',full.names = T)
+
+mtdid<-rbindlist(lapply(files_paths,function(f)readRDS(f)@meta.data|>data.table(keep.rownames =cell_id )))
+mtdid
+mtd<-merge(mtd,mtdid)
+fwrite(mtd,fp(out,'Cell_Metadata_ByCell.csv.gz'))
+mtd<-fread(fp(out,'Cell_Metadata_ByCell.csv.gz'))
+
+#mtd[,cell_id:=exp_component_name] #here be sure to save the name of your cells matching with the name in the matrix in the cell_id column
+
+#h5ls(files_paths[1]) #to know where the raw counts matrix is stored
+#raw_counts_location<-'layers/UMIs'
+# obj<-readRDS('../../../../ShareSpace/MIT_ROSMAP_Multiomics/Astrocytes.rds')
+# head(obj[[]])
+
+mtd[,to_keep:=1:.N%in%head(sample(1:.N,ifelse(.N*pct_keep>min_by_group,
+                                              round(.N*pct_keep),
+                                              min(c(min_by_group,.N))),replace=F),
+                           max_by_group),
+    by=cell_group]
+
+mtd[(to_keep)]
+
+brain_downsampled<-Reduce(function(x,y)merge(x,y),
+                          lapply(files_paths,function(file){
+  message('reading ',file)
+  # objf<-CreateSeuratObject(dataf,meta.data = data.frame(mtdf[(to_keep)],row.names = 'cell_id'))
+  obj<-readRDS(file)
+  obj<-UpdateSeuratObject(obj)
+  mtc<-merge(data.table(obj@meta.data,keep.rownames = cell_id),
+             mtd[,.SD,.SDcols=c(setdiff(colnames(mtd),
+                                      colnames(obj@meta.data)),cell_id)],by=cell_id)
+  
+  obj<-AddMetaData(object = obj,data.frame(mtc,row.names = cell_id))
+  
+  objf<-obj[,mtc[(to_keep)][[cell_id]]]
+  return(objf)
+  
+}))
+
+brain_downsampled
+brain_downsampled<-NormalizeData(brain_downsampled)
+brain_downsampled<-FindVariableFeatures(brain_downsampled)
+brain_downsampled<-ScaleData(brain_downsampled)
+brain_downsampled<-RunPCA(brain_downsampled)
+brain_downsampled<-RunUMAP(brain_downsampled,dims = 1:50)
+DimPlot(brain_downsampled,group.by = 'predicted.id',label = T)+NoLegend()
+
+saveRDS(brain_downsampled,file = file.path(out,'ROSMAP_MIT_DLPFC_downsampled_representative_seaad_anno.rds'))
+
+table(brain_downsampled$predicted.id)
+
+#downsampling based on main celltype####
+pct_keep=0.2
+cell_group='main_cell_type'
+cell_id='cellID'
+
+min_by_group=500
+max_by_group=2000
+
+mtd<-fread(fp(out,'Cell_Metadata_ByCell.csv.gz'))
+#add main celltype in the metadata
+mtd[,main_cell_type:=str_remove(cell_type,'_set[1-3]+')]
+
+fwrite(mtd,fp(out,'Cell_Metadata_ByCell.csv.gz'))
+
+mtd[,to_keep:=1:.N%in%head(sample(1:.N,ifelse(.N*pct_keep>min_by_group,
+                                              round(.N*pct_keep),
+                                              min(c(min_by_group,.N))),replace=F),
+                           max_by_group),
+    by=cell_group]
+
+brain_downsampled<-Reduce(function(x,y)merge(x,y),lapply(files_paths,function(file){
+  message('reading ',file)
+  # objf<-CreateSeuratObject(dataf,meta.data = data.frame(mtdf[(to_keep)],row.names = 'cell_id'))
+  obj<-readRDS(file)
+  obj<-UpdateSeuratObject(obj)
+  mtc<-merge(data.table(obj@meta.data,keep.rownames = cell_id),
+             mtd[,.SD,.SDcols=c(setdiff(colnames(mtd),
+                                        colnames(obj@meta.data)),cell_id)],
+             by=cell_id)
+  
+  obj<-AddMetaData(object = obj,data.frame(mtc,row.names = cell_id))
+  
+  
+  
+  objf<-obj[,mtc[(to_keep)][[cell_id]]]
+  return(objf)
+  
+}))
+
+brain_downsampled
+brain_downsampled<-NormalizeData(brain_downsampled)
+brain_downsampled<-FindVariableFeatures(brain_downsampled)
+brain_downsampled<-ScaleData(brain_downsampled)
+brain_downsampled<-RunPCA(brain_downsampled)
+brain_downsampled<-RunUMAP(brain_downsampled,dims = 1:50)
+DimPlot(brain_downsampled,group.by = 'main_cell_type',label = T)+NoLegend()
+
+saveRDS(brain_downsampled,
+        file = file.path(out,
+                         'ROSMAP_MIT_DLPFC_downsampled_representative_maincelltypes.rds'))
+
+brain_downsampled<-readRDS(file = file.path(out,
+                         'ROSMAP_MIT_DLPFC_downsampled_representative_maincelltypes.rds'))
+table(brain_downsampled$main_cell_type)
 
 
 
