@@ -12,7 +12,7 @@ It contains:
 - snRNA-seq for  2 brain regions : MTG and DLPFC
 - snATAC-seq data for MTG region
 
-Preprocessing notebooks:
+Preprocessing notebooks:  
 Data presentation : [SEAAD_snRNA_data.ipynb](notebooks/SEAAD_snRNA_data.ipynb)  
 Data QC/Preprocessing : [SEAAD_QC.ipynb](notebooks/SEAAD_QC.ipynb)  
 Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk.ipynb)  
@@ -31,10 +31,10 @@ It contains:
 - snRNA-seq for DLPFC for ~400 samples from Columbia/De Jager (To be added).
 
   
-Preprocessing notebooks/scripts:
+Preprocessing notebooks/scripts:  
 snATAC data preprocessing [04-ROSMAP_MIT_ATAC.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/04-ROSMAP_MIT_ATAC.R)
 
-Preprocessing of snRNA/ATAC associated WGS based genotyping [05-ROSMAP_MIT_WGS.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/05-ROSMAP_MIT_WGS.R)
+snRNA/ATAC associated WGS based genotyping [05-ROSMAP_MIT_WGS.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/05-ROSMAP_MIT_WGS.R)
 
 
 ## Gazestani et al
