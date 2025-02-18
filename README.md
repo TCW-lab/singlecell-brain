@@ -3,7 +3,7 @@ Pipelines to preprocess Human (postmortem) brain single cell genomics data
 
 
 # Dataset analysis 
-We looking into 3 different single cell brain datasets : 
+We looking into different single nuclei genomics from postmortem brain : 
 from SEA-AD , ROSMAP, and Gazestani et al cohort
 
 ## SEA-AD
@@ -21,9 +21,6 @@ Data pseudobulk generation : [SEAAD_pseudobulk.ipynb](notebooks/SEAAD_pseudobulk
 Astrocyte Pseudobulk Differential Expression analysis : [pseudobulk_deseq2.ipynb](notebooks/pseudobulk_deseq2.ipynb)  
 Astrocyte fgsea analysis : [fgsea_analysis.ipynb)](https://github.com/TCW-lab/singlecell-brain/blob/main/notebooks/fgsea_analysis.ipynb)
 
-## Gazestani et al
-Some checks in the dataset: [02-Gazestani_EarlyAD.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/02-Gazestani_EarlyAD.R)
-
 
 ## ROSMAP
 orginal (preprocess to be added, bug Alexandre if it is still not done) data can be found at `/projectnb/tcwlab/ShareSpace/ROSMAP`
@@ -38,6 +35,10 @@ Preprocessing notebooks/scripts:
 snATAC data preprocessing [04-ROSMAP_MIT_ATAC.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/04-ROSMAP_MIT_ATAC.R)
 
 Preprocessing of snRNA/ATAC associated WGS based genotyping [05-ROSMAP_MIT_WGS.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/05-ROSMAP_MIT_WGS.R)
+
+
+## Gazestani et al
+Some checks in the dataset: [02-Gazestani_EarlyAD.R](https://github.com/TCW-lab/singlecell-brain/blob/main/scripts/02-Gazestani_EarlyAD.R)
 
 
 # Some  Documentations
