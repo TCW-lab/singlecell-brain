@@ -145,4 +145,6 @@ for(file in fragment_files){
   
   
 }
+#check profile
+mat<-fread('')
 

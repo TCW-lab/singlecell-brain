@@ -17,7 +17,7 @@ CreateJobFile(cmds,'scripts/04A-tabix_fragments_files.qsub',modules = 'samtools'
 RunQsub('scripts/04A-tabix_fragments_files.qsub',job_name = 'tabix')        
 
 
-#1) produce the peak count matrix from fragments.tsv file for each individual
+#1) produce the peak count matrix from fragments.tsv file for each individual####
 CreateJobForRfile('scripts/04B-joincall_peak_cell_matrix_per_individual.R',nThreads = 28,maxHours = 72)
 RunQsub('scripts/04B-joincall_peak_cell_matrix_per_individual.R',job_name = 'PeakMat')        
 
@@ -488,7 +488,7 @@ mtd[,n.ct.all:=.N,by=.(main_cell_type)]
 
 
 mtsc<-unique(mtd,by=c('libraryID','main_cell_type'))
-
+mtsc[]
 ggplot(mtsc)+
   geom_boxplot(aes(x=main_cell_type,y=pct.ct,fill=`cognitive_status`),position='dodge')+
   theme_bw()
@@ -668,7 +668,7 @@ CreateJobForRfile('scripts/04H-MergeMainCellType.R',nThreads = 28)
 RunQsub('scripts/04H-MergeMainCellType.R',job_name = 'mergeMain')
 
 
-#8) cell type level QC : 
+#8) cell type level QC : ####
 #for 1
 #3* IQR? of nCount, nFeature, pct read, tss enrichment etc
 Exc<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Exc.rds')
@@ -755,20 +755,19 @@ RunQsub('scripts/04I-cell_level_QC.R',wait_for = 'mergeMain',job_name = 'CellQC'
 # to increase discovery of subpop specific peak, call per groups of donors (non outliers donors only).
 # for each celltype group donors according to KNN/SNN celltype spe PCA of celltype spe peak count matrix
 # (group can be different depending of cell type)
-#for 1 ct
+## a) peak calling
+#do it for 1 ct
 astro<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Astro.rds')
 
 #rm outlier
 astro<-astro[,!astro$outlier]
 table(astro$libraryID)
 
-#per cell type 
-#1) peak call per cluster
-
 #at least 20 cells per donor
 samples_to_keep<-names(which(table(astro$libraryID)>20))
 astro<-astro[,astro$libraryID%in%samples_to_keep]
 
+#cluster samples according to chromatin profile
 astro_pseudo<-AggregateExpression(astro,slot = 'data',
                                   assays = 'peaksCT',return.seurat = T,group.by = 'libraryID')
 
@@ -844,7 +843,7 @@ length(unique(peaks_dt$peak_id))#491503 - 318278 = 173k new peak
 fwrite(peaks_dt,fp(out,"perDonorGroups_celltype_peaks.csv.gz"))
 peaks_dt<-fread(fp(out,"perDonorGroups_celltype_peaks.csv.gz"))
 
-#celltype spe peak
+#Sanity check: celltype spe peak
 peaksct_dt<-fread(fp(out,"brain_12best_samples_qc_celltype_peaks.csv.gz"))
 table(peaksct_dt$cell_type)
 peaks_dt<-rbind(peaks_dt[,call:='PerSampleGroups'],peaksct_dt[,call:='12BestSamples'])
@@ -889,11 +888,13 @@ ggplot(peaks_dt[(group_spe)])+geom_bar(aes(x=cell_type,fill=group),position = 'd
 
 fwrite(peaks_dt,fp(out,"perDonorGroups_celltype_peaks_groupsinfos.csv.gz"))
 
-#create new feature matrix 
+
+## b) Create new feature matrix based on these peaks
 CreateJobForRfile('scripts/04Ji-CountPerCelltype.R',nThreads = 28,maxHours = 48)
 RunQsub('scripts/04Ji-CountPerCelltype.R',
         job_name = 'DonorGroupPeakCount',wait_for ='PeakDonorGroup' )
 
+#c) QC Stats
 #=> %frag_in_peak before / after
 mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/metadata_all_nuclei_celltype_annotated.csv.gz')
 mtd[,clinical_status:=ifelse(cognitive_status=='AD',"AD",'NL')]
@@ -1031,15 +1032,14 @@ ggplot(mtscf,aes(x=APOE4_carrier,y=transposition.event.outside.peak,col=apoe4))+
 # 
 # mtsc[,wilcox.test()]
 
-#stats 
+#N cells per sample
 mtd<-fread('outputs/04-ROSMAP_MIT_ATAC/all_final_ATACseq_nuclei_metadata.csv.gz')
 
 ggplot(mtd)+geom_bar(aes(x=libraryID))+facet_wrap('cognitive_status',scales = 'free_x')+theme_bw()
-?FeatureMatrix
 
 
 
-#10) pseudobulk peak count creation
+#10) pseudobulk peak count creation#####
 #for 1
 source('../../utils/r_utils.R')
 library(Signac)
@@ -1048,6 +1048,11 @@ out1<-fp(out,'pseudobulk_data')
 dir.create(out1)
 astro<-readRDS('outputs/04-ROSMAP_MIT_ATAC/Astro.rds')
 head(astro[[]])
+table(astro$outlier)
+table(astro$cell.outlier)
+table(astro$donor.outlier)
+mtd=astro[[]]|>data.table()
+table(mtd[(donor.outlier)]$outlier.ethnicity)
 bulk=AggregateExpression(astro,
                          return.seurat = TRUE, 
                          slot = "counts", assays = "peaksDCT", group.by = c("individualID"))
@@ -1068,6 +1073,29 @@ for(f in seurat_files){
   bulk
   saveRDS(bulk,fp(out1,ps(ct,'.rds')))
 }
+
+# #pseudobulk_qc:
+# #only non outlier donors and cell
+# out1<-fp(out,'pseudobulk_qc')
+# dir.create(out1)
+# seurat_files<-list.files(out,'Ast|Exc|Inh|Mic|Oligo|OPC|VLMC',full.names = T)
+# seurat_files
+# for(f in seurat_files){
+#   ct=tools::file_path_sans_ext(basename(f))
+#   message(ct)
+#   atac<-readRDS(f)
+#   #rm outlier
+#   atac<-atac[,!atac$outlier]
+#   table(atac$libraryID)
+#   
+#   message(ncol(atac),' nuclei')
+#   pseudo=AggregateExpression(atac,
+#                            return.seurat = TRUE, 
+#                            slot = "counts", assays = "peaksDCT", group.by = c("individualID"))
+#   pseudo$n.cells<- table(atac$individualID)[colnames(pseudo)]
+#   
+#   saveRDS(pseudo,fp(out1,ps(ct,'.rds')))
+# }
 
 #repressive element accessibility analysis
 #see 04K
